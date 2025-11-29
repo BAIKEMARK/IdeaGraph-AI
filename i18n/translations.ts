@@ -1,0 +1,44 @@
+export type Language = 'en' | 'zh';
+
+export const translations = {
+  en: {
+    app_title: "IdeaGraph AI",
+    capture_label: "Capture New Insight",
+    capture_placeholder: "Type your raw thoughts here... AI will structure them.",
+    capture_btn: "Capture",
+    distilling: "Distilling...",
+    library_title: "Your Library",
+    no_ideas: "No ideas distilled yet.",
+    select_idea_prompt: "Select an idea to explore its constellation",
+    ai_summary_title: "AI Summary",
+    workbench_title: "Contextual Workbench",
+    chat_init: "I've analyzed \"{0}\". Ask me about its structure, connections, or how to expand it.",
+    you: "You",
+    ai_partner: "AI Partner",
+    chat_placeholder: "Ask about this idea or suggest changes...",
+    rag_support: "Supports Evolution & RAG",
+    shift_enter: "Shift + Enter for new line",
+    error_failed_distill: "Failed to distill idea. Check backend connection.",
+    error_connect: "Sorry, I encountered an error connecting to the AI backend."
+  },
+  zh: {
+    app_title: "灵感图谱 AI",
+    capture_label: "捕获新灵感",
+    capture_placeholder: "在此输入您的原始想法... AI 将为您结构化整理。",
+    capture_btn: "捕获",
+    distilling: "提炼中...",
+    library_title: "知识库",
+    no_ideas: "暂无灵感记录。",
+    select_idea_prompt: "选择一个灵感以探索其知识星系",
+    ai_summary_title: "AI 摘要",
+    workbench_title: "上下文工作台",
+    chat_init: "我已分析 \"{0}\"。您可以询问关于它的结构、关联或如何扩展它。",
+    you: "您",
+    ai_partner: "AI 助手",
+    chat_placeholder: "询问关于此灵感的问题或建议修改...",
+    rag_support: "支持进化与图谱RAG",
+    shift_enter: "Shift + Enter 换行",
+    error_failed_distill: "提炼失败。请检查后端连接。",
+    error_connect: "抱歉，连接 AI 后端时发生错误。"
+  }
+};

@@ -50,24 +50,18 @@ function AppContent() {
   // Load all ideas from backend on mount
   useEffect(() => {
     const loadIdeas = async () => {
-      console.log("🔄 Loading ideas from backend...");
       try {
         const savedIdeas = await getAllIdeas();
-        console.log(`✅ Loaded ${savedIdeas.length} ideas from backend:`, savedIdeas);
+        console.log(`✅ Loaded ${savedIdeas.length} ideas from backend`);
         if (savedIdeas.length > 0) {
           setIdeas(savedIdeas);
           setSelectedIdeaId(savedIdeas[0].idea_id);
-          console.log("✅ Ideas state updated");
-        } else {
-          console.log("⚠️ No ideas in backend, using mock data");
         }
       } catch (err) {
-        console.error("❌ Failed to load ideas from backend:", err);
-        console.log("⚠️ Using mock data as fallback");
+        console.warn("Failed to load ideas from backend, using mock data:", err);
         // Keep using MOCK_IDEAS as fallback
       } finally {
         setIsLoading(false);
-        console.log("✅ Loading complete");
       }
     };
 
@@ -113,16 +107,28 @@ function AppContent() {
     }
   };
 
-  const handleUpdateIdea = (id: string, updates: Partial<DistilledData>) => {
+  const handleUpdateIdea = (id: string, updates: Partial<Idea>) => {
     setIdeas(prev => prev.map(idea => {
       if (idea.idea_id === id) {
-        return {
+        const updatedIdea = {
           ...idea,
-          distilled_data: {
-            ...idea.distilled_data,
-            ...updates
-          }
+          ...updates,
+          // If updates contain distilled_data, merge it properly
+          ...(updates.distilled_data && {
+            distilled_data: {
+              ...idea.distilled_data,
+              ...updates.distilled_data
+            }
+          })
         };
+        
+        // Save updated idea to backend
+        if (updatedIdea.embedding_vector) {
+          saveIdeaToVectorDB(updatedIdea.idea_id, updatedIdea.embedding_vector, updatedIdea)
+            .catch(err => console.warn("Failed to save updated idea:", err));
+        }
+        
+        return updatedIdea;
       }
       return idea;
     }));
@@ -149,28 +155,6 @@ function AppContent() {
             title="Switch Language"
           >
             <Languages className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Debug Button */}
-        <div className="p-2 border-b border-slate-800 bg-slate-800/50">
-          <button
-            onClick={async () => {
-              console.log("🔄 Manual reload triggered");
-              try {
-                const savedIdeas = await getAllIdeas();
-                console.log(`✅ Manually loaded ${savedIdeas.length} ideas:`, savedIdeas);
-                if (savedIdeas.length > 0) {
-                  setIdeas(savedIdeas);
-                  setSelectedIdeaId(savedIdeas[0].idea_id);
-                }
-              } catch (err) {
-                console.error("❌ Manual load failed:", err);
-              }
-            }}
-            className="w-full px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold transition-colors"
-          >
-            🔄 Reload from Backend (Debug)
           </button>
         </div>
 

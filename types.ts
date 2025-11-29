@@ -31,11 +31,12 @@ export interface Idea {
   distilled_data: DistilledData;
   embedding_vector?: number[];
   linked_idea_ids?: string[];
+  chat_history?: ChatMessage[];
 }
 
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
   content: string;
-  timestamp: Date;
+  timestamp: Date | string; // Allow string for serialization
 }

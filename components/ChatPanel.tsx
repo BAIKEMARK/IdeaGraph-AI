@@ -17,14 +17,23 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ idea, onUpdateIdea }) => {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Clear chat when idea changes
+  // Load chat history when idea changes
   useEffect(() => {
-    setMessages([{
-      id: 'init',
-      role: 'model',
-      content: t('chat_init', idea.distilled_data.one_liner),
-      timestamp: new Date()
-    }]);
+    if (idea.chat_history && idea.chat_history.length > 0) {
+      // Load existing chat history
+      setMessages(idea.chat_history.map(msg => ({
+        ...msg,
+        timestamp: typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp
+      })));
+    } else {
+      // Initialize with welcome message
+      setMessages([{
+        id: 'init',
+        role: 'model',
+        content: t('chat_init', idea.distilled_data.one_liner),
+        timestamp: new Date()
+      }]);
+    }
   }, [idea.idea_id, t]);
 
   // Auto scroll
@@ -60,7 +69,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ idea, onUpdateIdea }) => {
         content: responseText,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiMsg]);
+      const updatedMessages = [...messages, userMsg, aiMsg];
+      setMessages(updatedMessages);
+      
+      // Save chat history to idea
+      onUpdateIdea({ chat_history: updatedMessages });
     } catch (err) {
       console.error(err);
       // Optional: Add error message to chat

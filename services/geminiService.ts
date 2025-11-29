@@ -126,25 +126,21 @@ export async function chatWithIdea(
 
 export async function getAllIdeas(): Promise<Idea[]> {
   try {
-    console.log(`📡 Fetching ideas from ${BACKEND_URL}/get_all_ideas`);
     const response = await fetch(`${BACKEND_URL}/get_all_ideas`, {
       method: "GET",
       // Don't set Content-Type for GET requests to avoid CORS preflight
     });
 
-    console.log(`📡 Response status: ${response.status}`);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`📡 Error response:`, errorText);
+      console.error(`Failed to fetch ideas (${response.status}):`, errorText);
       throw new Error(`Failed to fetch ideas: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log(`📡 Received data:`, data);
     return data.ideas;
   } catch (error) {
-    console.error("❌ Backend Get All Ideas Error:", error);
+    console.error("Backend Get All Ideas Error:", error);
     throw error;
   }
 }

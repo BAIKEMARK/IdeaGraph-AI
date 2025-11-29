@@ -4,7 +4,8 @@ import { Plus, BrainCircuit, MessageSquare, LayoutGrid, Loader2, Languages } fro
 import { GraphView } from './components/GraphView';
 import { IdeaList } from './components/IdeaList';
 import { ChatPanel } from './components/ChatPanel';
-import { distillIdeaFromText } from './services/geminiService';
+import { RelatedIdeas } from './components/RelatedIdeas';
+import { distillIdeaFromText, saveIdeaToVectorDB } from './services/geminiService';
 import { Idea, DistilledData } from './types';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
@@ -60,7 +61,18 @@ function AppContent() {
         created_at: new Date().toISOString(),
         content_raw: inputText,
         distilled_data: distilledData,
+        embedding_vector: (distilledData as any).embedding_vector,
       };
+
+      // Save to vector database for RAG
+      if (newIdea.embedding_vector) {
+        try {
+          await saveIdeaToVectorDB(newIdea.idea_id, newIdea.embedding_vector, newIdea);
+        } catch (saveErr) {
+          console.warn("Failed to save to vector DB:", saveErr);
+          // Continue anyway - idea is still usable
+        }
+      }
 
       setIdeas(prev => [newIdea, ...prev]);
       setSelectedIdeaId(newIdea.idea_id);
@@ -200,16 +212,27 @@ function AppContent() {
                    </div>
                 </div>
 
-                {/* Chat Workbench */}
+                {/* Right Panel: Related Ideas + Chat */}
                 <div className="h-1/2 lg:h-full lg:w-1/3 bg-slate-900 flex flex-col border-l border-slate-800">
-                   <div className="p-3 border-b border-slate-800 flex items-center space-x-2 bg-slate-800/50">
-                      <MessageSquare className="w-4 h-4 text-emerald-400" />
-                      <span className="text-sm font-semibold text-slate-300">{t('workbench_title')}</span>
+                   {/* Related Ideas Section */}
+                   <div className="border-b border-slate-800 bg-slate-900/50">
+                     <RelatedIdeas 
+                       currentIdea={selectedIdea}
+                       onSelectIdea={setSelectedIdeaId}
+                     />
                    </div>
-                   <ChatPanel 
-                     idea={selectedIdea} 
-                     onUpdateIdea={(updates) => handleUpdateIdea(selectedIdea.idea_id, updates)}
-                   />
+                   
+                   {/* Chat Workbench */}
+                   <div className="flex-1 flex flex-col min-h-0">
+                     <div className="p-3 border-b border-slate-800 flex items-center space-x-2 bg-slate-800/50">
+                        <MessageSquare className="w-4 h-4 text-emerald-400" />
+                        <span className="text-sm font-semibold text-slate-300">{t('workbench_title')}</span>
+                     </div>
+                     <ChatPanel 
+                       idea={selectedIdea} 
+                       onUpdateIdea={(updates) => handleUpdateIdea(selectedIdea.idea_id, updates)}
+                     />
+                   </div>
                 </div>
             </div>
           </>

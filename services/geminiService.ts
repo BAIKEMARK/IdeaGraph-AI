@@ -32,6 +32,63 @@ export async function distillIdeaFromText(text: string): Promise<DistilledData> 
   }
 }
 
+export async function saveIdeaToVectorDB(
+  ideaId: string,
+  embeddingVector: number[],
+  ideaData: Idea
+): Promise<void> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/save_idea`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        idea_id: ideaId,
+        embedding_vector: embeddingVector,
+        idea_data: ideaData,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to save idea: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Backend Save Error:", error);
+    throw error;
+  }
+}
+
+export async function searchSimilarIdeas(
+  queryEmbedding: number[],
+  topK: number = 3,
+  excludeId?: string
+): Promise<Array<{ idea_id: string; similarity: number; idea_data: Idea }>> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/search_similar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query_embedding: queryEmbedding,
+        top_k: topK,
+        exclude_id: excludeId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error("Backend Search Error:", error);
+    throw error;
+  }
+}
+
 export async function chatWithIdea(
   history: { role: string; text: string }[],
   currentIdea: Idea
@@ -44,7 +101,7 @@ export async function chatWithIdea(
       },
       body: JSON.stringify({
         history,
-        currentIdea
+        current_idea: currentIdea
       }),
     });
 

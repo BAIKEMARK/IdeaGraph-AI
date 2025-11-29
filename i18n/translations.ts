@@ -19,7 +19,10 @@ export const translations = {
     rag_support: "Supports Evolution & RAG",
     shift_enter: "Shift + Enter for new line",
     error_failed_distill: "Failed to distill idea. Check backend connection.",
-    error_connect: "Sorry, I encountered an error connecting to the AI backend."
+    error_connect: "Sorry, I encountered an error connecting to the AI backend.",
+    loading_related: "Loading related ideas...",
+    no_related_ideas: "No related ideas found",
+    related_ideas: "Related Ideas"
   },
   zh: {
     app_title: "灵感图谱 AI",
@@ -39,6 +42,9 @@ export const translations = {
     rag_support: "支持进化与图谱RAG",
     shift_enter: "Shift + Enter 换行",
     error_failed_distill: "提炼失败。请检查后端连接。",
-    error_connect: "抱歉，连接 AI 后端时发生错误。"
+    error_connect: "抱歉，连接 AI 后端时发生错误。",
+    loading_related: "加载相关灵感中...",
+    no_related_ideas: "未找到相关灵感",
+    related_ideas: "相关灵感"
   }
 };

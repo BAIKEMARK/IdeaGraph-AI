@@ -1,81 +1,81 @@
-# IdeaGraph AI - Graph RAG Knowledge Management
+# IdeaGraph AI
 
-A knowledge management system that uses Graph RAG (Retrieval-Augmented Generation) to structure, visualize, and connect your ideas.
+一个基于 AI 的想法管理和可视化工具，使用知识图谱和 RAG 技术帮助你捕捉、整理和探索创意。
 
-## Features
+## 快速开始
 
-- **AI-Powered Distillation**: Automatically extract key concepts, tags, and relationships from raw text
-- **Knowledge Graph Visualization**: Interactive D3.js graph showing concept relationships
-- **Vector Search**: Find similar ideas using semantic embeddings
-- **Graph RAG**: Chat with context from related ideas and graph structure
-- **Local Vector Database**: Simple file-based storage (no external dependencies)
-- **Bilingual Support**: English and Chinese interface
+### 1. 安装依赖
 
-View your app in AI Studio: https://ai.studio/apps/drive/15ApUloCDkaauvoYr9JpX1PgKEELh0XDB
+```bash
+# 前端
+npm install
 
-## Run Locally
+# 后端
+cd backend
+pip install -r requirements.txt
+```
 
-**Prerequisites:**  Node.js, Python 3.8+
+### 2. 配置 API
 
-### Frontend Setup
+复制 `.env.example` 到 `.env` 并填入你的 API 密钥：
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+cp .env.example .env
+```
 
-2. Configure API keys in [.env.local](.env.local):
-   ```env
-   LLM_API_KEY=your_api_key_here
-   LLM_BASE_URL=https://api.openai.com/v1
-   LLM_MODEL=gpt-4o-mini
-   
-   EMBEDDING_API_KEY=your_api_key_here
-   EMBEDDING_BASE_URL=https://api.openai.com/v1
-   EMBEDDING_MODEL=text-embedding-3-small
-   ```
+编辑 `.env` 文件：
+```
+LLM_API_KEY=your_api_key_here
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o-mini
+```
 
-3. Run the frontend:
-   ```bash
-   npm run dev
-   ```
+### 3. 启动应用
 
-### Backend Setup
+```bash
+# 启动后端（在 backend 目录）
+python app.py
 
-1. Install Python dependencies:
-   ```bash
-   pip install -r backend/requirements.txt
-   ```
+# 启动前端（在根目录）
+npm run dev
+```
 
-2. Run the backend server:
-   ```bash
-   python backend/app.py
-   ```
+访问 http://localhost:5173
 
-The backend will run on `http://localhost:5000`
+## 项目结构
 
-## How Graph RAG Works
+```
+├── backend/           # Flask 后端
+│   ├── data/         # 数据库文件
+│   ├── tests/        # 测试脚本
+│   └── app.py        # 主应用
+├── components/       # React 组件
+├── services/         # API 服务
+├── docs/            # 文档
+└── scripts/         # 工具脚本
+```
 
-1. **Idea Capture**: Enter raw text → AI extracts structure (nodes, edges, tags)
-2. **Vector Storage**: Each idea gets an embedding vector stored locally in `vector_db.pkl`
-3. **Similarity Search**: When viewing an idea, find related ideas using cosine similarity
-4. **Graph Traversal**: Extract concepts and relationships from the knowledge graph
-5. **RAG Chat**: AI assistant uses related ideas + graph context to provide informed responses
+## 功能特性
 
-## Data Storage
+- 🧠 AI 驱动的想法提炼和结构化
+- 📊 交互式知识图谱可视化
+- 🔍 基于向量相似度的相关想法推荐
+- 💬 上下文感知的 AI 对话助手
+- 🌐 多语言支持（中文/英文）
 
-- `vector_db.pkl`: Stores embedding vectors for similarity search
-- `ideas_db.pkl`: Stores complete idea data with metadata
+## 技术栈
 
-These files are created automatically in the backend directory.
+- **前端**: React + TypeScript + Vite + D3.js
+- **后端**: Flask + OpenAI API + NumPy
+- **存储**: 向量数据库（Pickle）
 
-## Supported API Providers
+## 文档
 
-This app supports any OpenAI-compatible API, including:
+详细文档请查看 `docs/` 目录：
+- [API 配置](docs/API_CONFIGURATION.md)
+- [快速开始指南](docs/QUICKSTART.md)
+- [知识图谱指南](docs/GRAPH_RAG_GUIDE.md)
 
-- **OpenAI**: Use `https://api.openai.com/v1`
-- **Azure OpenAI**: Use your Azure endpoint
-- **Local models** (Ollama, LM Studio): Use `http://localhost:11434/v1` or similar
-- **Other providers** (DeepSeek, Moonshot, etc.): Use their respective endpoints
+## License
 
-See [.env.example](.env.example) for configuration examples.
+MIT

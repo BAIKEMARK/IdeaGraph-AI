@@ -28,10 +28,12 @@ def log_response(response):
     print(f"Response: {response.status}")
     return response
 
-# Vector Database Storage (use backend directory)
+# Vector Database Storage (use backend/data directory)
 BACKEND_DIR = Path(__file__).parent
-VECTOR_DB_PATH = BACKEND_DIR / "vector_db.pkl"
-IDEAS_DB_PATH = BACKEND_DIR / "ideas_db.pkl"
+DATA_DIR = BACKEND_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
+VECTOR_DB_PATH = DATA_DIR / "vector_db.pkl"
+IDEAS_DB_PATH = DATA_DIR / "ideas_db.pkl"
 
 # Get API configuration
 LLM_API_KEY = os.getenv("LLM_API_KEY")

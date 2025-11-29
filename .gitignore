@@ -27,6 +27,10 @@ venv/
 env/
 ENV/
 
+# Data files
+backend/data/*.pkl
+*.pkl
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

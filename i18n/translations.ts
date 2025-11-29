@@ -22,7 +22,9 @@ export const translations = {
     error_connect: "Sorry, I encountered an error connecting to the AI backend.",
     loading_related: "Loading related ideas...",
     no_related_ideas: "No related ideas found",
-    related_ideas: "Related Ideas"
+    related_ideas: "Related Ideas",
+    saving: "Saving...",
+    loading: "Loading..."
   },
   zh: {
     app_title: "灵感图谱 AI",
@@ -45,6 +47,7 @@ export const translations = {
     error_connect: "抱歉，连接 AI 后端时发生错误。",
     loading_related: "加载相关灵感中...",
     no_related_ideas: "未找到相关灵感",
-    related_ideas: "相关灵感"
+    related_ideas: "相关灵感",
+    saving: "保存中..."
   }
 };

@@ -168,6 +168,9 @@ def traverse_graph(idea_data, max_depth=1):
 @app.route("/api/distill", methods=["POST"])
 def distill():
     """Distill raw text into structured idea data using OpenAI-compatible API"""
+    import time
+    start_time = time.time()
+    
     try:
         if not llm_client or not embedding_client:
             return jsonify({"error": "API not configured. Please set LLM_API_KEY in backend/.env"}), 500
@@ -178,9 +181,10 @@ def distill():
         if not text:
             return jsonify({"error": "No text provided"}), 400
 
-        print(f"Distilling text: {text[:100]}...")
+        print(f"⏱️  Distilling text: {text[:100]}...")
         
         # Call LLM API
+        llm_start = time.time()
         response = llm_client.chat.completions.create(
             model=LLM_MODEL,
             messages=[
@@ -190,21 +194,27 @@ def distill():
             temperature=0.7,
             response_format={"type": "json_object"}
         )
+        llm_time = time.time() - llm_start
+        print(f"   LLM call: {llm_time:.2f}s")
         
         result_text = response.choices[0].message.content
         distilled = json.loads(result_text)
         
         # Generate embedding for the idea
+        emb_start = time.time()
         embedding_response = embedding_client.embeddings.create(
             model=EMBEDDING_MODEL,
             input=text
         )
         embedding_vector = embedding_response.data[0].embedding
+        emb_time = time.time() - emb_start
+        print(f"   Embedding call: {emb_time:.2f}s")
         
         # Add embedding to response
         distilled["embedding_vector"] = embedding_vector
         
-        # Note: Idea will be saved to vector DB when frontend provides idea_id
+        total_time = time.time() - start_time
+        print(f"✅ Total distill time: {total_time:.2f}s")
         
         return jsonify(distilled)
     
@@ -217,6 +227,9 @@ def distill():
 @app.route("/api/save_idea", methods=["POST"])
 def save_idea():
     """Save an idea to the vector database"""
+    import time
+    start_time = time.time()
+    
     try:
         data = request.json
         idea_id = data.get("idea_id")
@@ -226,17 +239,29 @@ def save_idea():
         if not idea_id or not embedding or not idea_data:
             return jsonify({"error": "Missing required fields"}), 400
         
+        print(f"💾 Saving idea {idea_id[:8]}...")
+        
+        db_start = time.time()
         add_to_vector_db(idea_id, embedding, idea_data)
+        db_time = time.time() - db_start
+        
+        total_time = time.time() - start_time
+        print(f"   DB write: {db_time:.3f}s")
+        print(f"✅ Total save time: {total_time:.3f}s")
         
         return jsonify({"status": "success", "idea_id": idea_id})
     
     except Exception as e:
+        print(f"❌ Save failed: {e}")
         return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/search_similar", methods=["POST"])
 def search_similar():
     """Search for similar ideas using vector similarity"""
+    import time
+    start_time = time.time()
+    
     try:
         data = request.json
         query_embedding = data.get("query_embedding")
@@ -246,7 +271,9 @@ def search_similar():
         if not query_embedding:
             return jsonify({"error": "No query embedding provided"}), 400
         
+        search_start = time.time()
         similar_ideas = search_similar_ideas(query_embedding, top_k, exclude_id)
+        search_time = time.time() - search_start
         
         results = [
             {
@@ -257,6 +284,9 @@ def search_similar():
             for idea_id, sim, idea_data in similar_ideas
         ]
         
+        total_time = time.time() - start_time
+        print(f"🔍 Search similar: {search_time:.3f}s (found {len(results)} ideas)")
+        
         return jsonify({"results": results})
     
     except Exception as e:
@@ -266,6 +296,9 @@ def search_similar():
 @app.route("/api/chat", methods=["POST"])
 def chat():
     """Chat about an idea using OpenAI-compatible API with RAG"""
+    import time
+    start_time = time.time()
+    
     try:
         if not llm_client:
             return jsonify({"error": "API not configured. Please set LLM_API_KEY in backend/.env"}), 500
@@ -280,6 +313,7 @@ def chat():
         current_id = current_idea.get("idea_id")
         
         # Build context from current idea
+        rag_start = time.time()
         idea_context = f"""
 Current Idea Context:
 - Summary: {current_idea.get('distilled_data', {}).get('one_liner', 'N/A')}
@@ -305,6 +339,9 @@ Current Idea Context:
         if graph_info['relations']:
             idea_context += f"Relationships: {'; '.join(graph_info['relations'][:3])}\n"
         
+        rag_time = time.time() - rag_start
+        print(f"⏱️  RAG processing: {rag_time:.3f}s")
+        
         # Convert history to OpenAI format
         messages = [
             {"role": "system", "content": CHAT_SYSTEM_PROMPT + "\n\n" + idea_context}
@@ -315,13 +352,19 @@ Current Idea Context:
             messages.append({"role": role, "content": msg["text"]})
         
         # Call LLM API
+        llm_start = time.time()
         response = llm_client.chat.completions.create(
             model=LLM_MODEL,
             messages=messages,
             temperature=0.8
         )
+        llm_time = time.time() - llm_start
+        print(f"   LLM call: {llm_time:.2f}s")
         
         reply = response.choices[0].message.content
+        
+        total_time = time.time() - start_time
+        print(f"✅ Total chat time: {total_time:.2f}s")
         
         return jsonify({"text": reply})
     

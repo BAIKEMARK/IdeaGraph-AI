@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, BrainCircuit, MessageSquare, LayoutGrid, Loader2, Languages } from 'lucide-react';
 import { GraphView } from './components/GraphView';
@@ -44,6 +44,8 @@ function AppContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingSaves, setPendingSaves] = useState<Set<string>>(new Set());
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const selectedIdea = ideas.find(i => i.idea_id === selectedIdeaId) || null;
 
@@ -107,6 +109,42 @@ function AppContent() {
     }
   };
 
+  // Debounced save function
+  const scheduleSave = (ideaId: string) => {
+    setPendingSaves(prev => new Set(prev).add(ideaId));
+    
+    // Clear existing timer
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    
+    // Schedule save after 2 seconds of inactivity
+    saveTimerRef.current = setTimeout(() => {
+      savePendingIdeas();
+    }, 2000);
+  };
+
+  const savePendingIdeas = async () => {
+    const idsToSave = Array.from(pendingSaves);
+    if (idsToSave.length === 0) return;
+    
+    console.log(`💾 Saving ${idsToSave.length} idea(s) to backend...`);
+    
+    for (const ideaId of idsToSave) {
+      const idea = ideas.find(i => i.idea_id === ideaId);
+      if (idea && idea.embedding_vector) {
+        try {
+          await saveIdeaToVectorDB(idea.idea_id, idea.embedding_vector, idea);
+        } catch (err) {
+          console.warn(`Failed to save idea ${ideaId}:`, err);
+        }
+      }
+    }
+    
+    setPendingSaves(new Set());
+    console.log('✅ Save complete');
+  };
+
   const handleUpdateIdea = (id: string, updates: Partial<Idea>) => {
     setIdeas(prev => prev.map(idea => {
       if (idea.idea_id === id) {
@@ -122,17 +160,35 @@ function AppContent() {
           })
         };
         
-        // Save updated idea to backend
-        if (updatedIdea.embedding_vector) {
-          saveIdeaToVectorDB(updatedIdea.idea_id, updatedIdea.embedding_vector, updatedIdea)
-            .catch(err => console.warn("Failed to save updated idea:", err));
-        }
+        // Schedule save instead of immediate save
+        scheduleSave(id);
         
         return updatedIdea;
       }
       return idea;
     }));
   };
+
+  // Save pending changes when switching ideas
+  useEffect(() => {
+    return () => {
+      if (pendingSaves.size > 0) {
+        savePendingIdeas();
+      }
+    };
+  }, [selectedIdeaId]);
+
+  // Save pending changes before unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (pendingSaves.size > 0) {
+        savePendingIdeas();
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [pendingSaves]);
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'zh' : 'en');
@@ -148,6 +204,12 @@ function AppContent() {
             <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
               {t('app_title')}
             </h1>
+            {pendingSaves.size > 0 && (
+              <span className="text-xs text-amber-500 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
+                {t('saving') || 'Saving...'}
+              </span>
+            )}
           </div>
           <button 
             onClick={toggleLanguage}

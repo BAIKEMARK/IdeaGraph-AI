@@ -329,6 +329,22 @@ Current Idea Context:
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/get_all_ideas", methods=["GET"])
+def get_all_ideas():
+    """Get all ideas from the vector database"""
+    try:
+        vectors, ideas = load_vector_db()
+        
+        # Convert ideas dict to list and sort by created_at (newest first)
+        ideas_list = list(ideas.values())
+        ideas_list.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        return jsonify({"ideas": ideas_list})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/health", methods=["GET"])
 def health():
     """Health check endpoint"""

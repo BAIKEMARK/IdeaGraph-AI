@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, BrainCircuit, MessageSquare, LayoutGrid, Loader2, Languages } from 'lucide-react';
 import { GraphView } from './components/GraphView';
 import { IdeaList } from './components/IdeaList';
 import { ChatPanel } from './components/ChatPanel';
 import { RelatedIdeas } from './components/RelatedIdeas';
-import { distillIdeaFromText, saveIdeaToVectorDB } from './services/geminiService';
+import { distillIdeaFromText, saveIdeaToVectorDB, getAllIdeas } from './services/geminiService';
 import { Idea, DistilledData } from './types';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
@@ -42,9 +42,37 @@ function AppContent() {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(MOCK_IDEAS[0].idea_id);
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const selectedIdea = ideas.find(i => i.idea_id === selectedIdeaId) || null;
+
+  // Load all ideas from backend on mount
+  useEffect(() => {
+    const loadIdeas = async () => {
+      console.log("🔄 Loading ideas from backend...");
+      try {
+        const savedIdeas = await getAllIdeas();
+        console.log(`✅ Loaded ${savedIdeas.length} ideas from backend:`, savedIdeas);
+        if (savedIdeas.length > 0) {
+          setIdeas(savedIdeas);
+          setSelectedIdeaId(savedIdeas[0].idea_id);
+          console.log("✅ Ideas state updated");
+        } else {
+          console.log("⚠️ No ideas in backend, using mock data");
+        }
+      } catch (err) {
+        console.error("❌ Failed to load ideas from backend:", err);
+        console.log("⚠️ Using mock data as fallback");
+        // Keep using MOCK_IDEAS as fallback
+      } finally {
+        setIsLoading(false);
+        console.log("✅ Loading complete");
+      }
+    };
+
+    loadIdeas();
+  }, []);
 
   const handleCreateIdea = async () => {
     if (!inputText.trim()) return;
@@ -124,6 +152,28 @@ function AppContent() {
           </button>
         </div>
 
+        {/* Debug Button */}
+        <div className="p-2 border-b border-slate-800 bg-slate-800/50">
+          <button
+            onClick={async () => {
+              console.log("🔄 Manual reload triggered");
+              try {
+                const savedIdeas = await getAllIdeas();
+                console.log(`✅ Manually loaded ${savedIdeas.length} ideas:`, savedIdeas);
+                if (savedIdeas.length > 0) {
+                  setIdeas(savedIdeas);
+                  setSelectedIdeaId(savedIdeas[0].idea_id);
+                }
+              } catch (err) {
+                console.error("❌ Manual load failed:", err);
+              }
+            }}
+            className="w-full px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold transition-colors"
+          >
+            🔄 Reload from Backend (Debug)
+          </button>
+        </div>
+
         {/* Input Area */}
         <div className="p-4 border-b border-slate-800 bg-slate-900">
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">
@@ -176,7 +226,12 @@ function AppContent() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative h-full">
-        {selectedIdea ? (
+        {isLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-600">
+            <Loader2 className="w-16 h-16 mb-4 opacity-20 animate-spin" />
+            <p className="text-lg font-medium">{t('loading') || 'Loading ideas...'}</p>
+          </div>
+        ) : selectedIdea ? (
           <>
              {/* Header */}
             <header className="h-14 border-b border-slate-800 flex items-center px-6 justify-between bg-slate-950/80">

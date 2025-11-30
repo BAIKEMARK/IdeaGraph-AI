@@ -69,34 +69,194 @@ if LLM_API_KEY:
         base_url=EMBEDDING_BASE_URL
     )
 
-# Prompts
-DISTILL_SYSTEM_PROMPT = """You are an AI assistant that distills user ideas into structured data.
-Given a raw text idea, extract:
-1. A one-liner summary
-2. Relevant tags (keywords)
-3. A detailed summary
-4. A graph structure with nodes and edges representing concepts, tools, people, and their relationships.
+# Valid entity and relation types
+VALID_ENTITY_TYPES = {"Concept", "Tool", "Person", "Problem", "Solution", "Methodology", "Metric"}
+VALID_RELATION_TYPES = {"solves", "causes", "contradicts", "consists_of", "depends_on", "enables", "disrupts", "powered_by", "relates_to"}
 
-Return JSON in this exact format:
-{
-  "one_liner": "...",
-  "tags": ["tag1", "tag2"],
-  "summary": "...",
-  "graph_structure": {
-    "nodes": [
-      {"id": "node1", "name": "Node Name", "type": "Concept", "desc": "Description"}
-    ],
-    "edges": [
-      {"source": "node1", "target": "node2", "relation": "relates_to", "desc": "Optional description"}
-    ]
-  }
-}
+# Prompts
+DISTILL_SYSTEM_PROMPT = """
+---Role---
+You are an expert Idea Distillation Specialist. Your goal is to transform messy user inputs into a structured "Idea Graph".
+
+---Instructions---
+1. **Core Distillation (The Root):**
+    * Analyze the input text to identify the single, most central concept.
+    * Generate a `one_liner`: A concise insight (max 20 words) capturing the essence.
+    * Identify `tags`: 3-5 high-level thematic tags.
+
+2. **Entity & Insight Extraction (The Nodes):**
+    * Identify clearly defined entities, concepts, mental models, or key arguments.
+    * **Entity Types**: [Concept, Tool, Person, Problem, Solution, Methodology, Metric].
+    * **Description**: Provide a concise description strictly based on the input context.
+
+3. **Relationship Extraction (The Edges):**
+    * Identify how these entities connect to the `Core Idea` or to each other.
+    * **Logic-First**: Prioritize logical relationships (e.g., "solves", "causes", "contradicts", "consists_of", "depends_on", "enables", "disrupts", "powered_by", "relates_to").
+
+4. **Output Format:**
+    * Return ONLY a valid JSON object. Do NOT include any markdown formatting or code blocks.
+    * Use this exact structure:
+    {
+      "one_liner": "...",
+      "tags": ["tag1", "tag2"],
+      "summary": "...",
+      "graph_structure": {
+        "nodes": [
+          {"id": "node1", "name": "Node Name", "type": "Concept", "desc": "Description"}
+        ],
+        "edges": [
+          {"source": "node1", "target": "node2", "relation": "relates_to", "desc": "Optional description"}
+        ]
+      }
+    }
+    
+IMPORTANT: Your response must be ONLY the JSON object, nothing else. No explanations, no markdown, just pure JSON.
 """
 
 CHAT_SYSTEM_PROMPT = """You are a helpful AI assistant discussing ideas with the user.
 You have context about the current idea being discussed. Help the user explore, refine, and expand their thoughts.
 Be conversational, insightful, and ask clarifying questions when appropriate.
 """
+
+# ============ Validation Functions ============
+
+def truncate_one_liner(text, max_words=20):
+    """Truncate one-liner to max_words at word boundary"""
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    return ' '.join(words[:max_words])
+
+def validate_and_fix_distilled_data(data):
+    """
+    Validate distilled data against schema and fix common issues.
+    Returns (is_valid, fixed_data, errors)
+    """
+    errors = []
+    fixed_data = data.copy()
+    
+    # Check required top-level fields
+    required_fields = ['one_liner', 'tags', 'summary', 'graph_structure']
+    for field in required_fields:
+        if field not in fixed_data:
+            errors.append(f"Missing required field: {field}")
+            # Provide defaults
+            if field == 'one_liner':
+                fixed_data[field] = "Untitled idea"
+            elif field == 'tags':
+                fixed_data[field] = []
+            elif field == 'summary':
+                fixed_data[field] = ""
+            elif field == 'graph_structure':
+                fixed_data[field] = {"nodes": [], "edges": []}
+    
+    # Validate and fix one_liner length
+    if 'one_liner' in fixed_data:
+        original_one_liner = fixed_data['one_liner']
+        fixed_data['one_liner'] = truncate_one_liner(original_one_liner, max_words=20)
+        if fixed_data['one_liner'] != original_one_liner:
+            print(f"⚠️  Truncated one_liner from {len(original_one_liner.split())} to 20 words")
+    
+    # Validate tags is a list
+    if 'tags' in fixed_data and not isinstance(fixed_data['tags'], list):
+        errors.append("tags must be a list")
+        fixed_data['tags'] = []
+    
+    # Validate graph_structure
+    if 'graph_structure' in fixed_data:
+        graph = fixed_data['graph_structure']
+        
+        if not isinstance(graph, dict):
+            errors.append("graph_structure must be an object")
+            fixed_data['graph_structure'] = {"nodes": [], "edges": []}
+        else:
+            # Validate nodes
+            if 'nodes' not in graph:
+                errors.append("graph_structure missing 'nodes'")
+                graph['nodes'] = []
+            elif not isinstance(graph['nodes'], list):
+                errors.append("graph_structure.nodes must be a list")
+                graph['nodes'] = []
+            else:
+                # Validate each node
+                valid_nodes = []
+                for i, node in enumerate(graph['nodes']):
+                    if not isinstance(node, dict):
+                        errors.append(f"Node {i} is not an object")
+                        continue
+                    
+                    # Check required node fields
+                    node_errors = []
+                    if 'id' not in node:
+                        node_errors.append(f"Node {i} missing 'id'")
+                    if 'name' not in node:
+                        node_errors.append(f"Node {i} missing 'name'")
+                    if 'type' not in node:
+                        node_errors.append(f"Node {i} missing 'type'")
+                    if 'desc' not in node:
+                        node_errors.append(f"Node {i} missing 'desc'")
+                    
+                    # Validate entity type
+                    if 'type' in node and node['type'] not in VALID_ENTITY_TYPES:
+                        errors.append(f"Node {i} has invalid type '{node['type']}'. Valid types: {VALID_ENTITY_TYPES}")
+                        # Try to fix common issues
+                        if node['type'].lower() == 'concept':
+                            node['type'] = 'Concept'
+                        else:
+                            node['type'] = 'Concept'  # Default to Concept
+                    
+                    if not node_errors:
+                        valid_nodes.append(node)
+                    else:
+                        errors.extend(node_errors)
+                
+                graph['nodes'] = valid_nodes
+            
+            # Validate edges
+            if 'edges' not in graph:
+                errors.append("graph_structure missing 'edges'")
+                graph['edges'] = []
+            elif not isinstance(graph['edges'], list):
+                errors.append("graph_structure.edges must be a list")
+                graph['edges'] = []
+            else:
+                # Validate each edge
+                valid_edges = []
+                node_ids = {node['id'] for node in graph.get('nodes', []) if 'id' in node}
+                
+                for i, edge in enumerate(graph['edges']):
+                    if not isinstance(edge, dict):
+                        errors.append(f"Edge {i} is not an object")
+                        continue
+                    
+                    # Check required edge fields
+                    edge_errors = []
+                    if 'source' not in edge:
+                        edge_errors.append(f"Edge {i} missing 'source'")
+                    elif edge['source'] not in node_ids:
+                        edge_errors.append(f"Edge {i} source '{edge['source']}' references non-existent node")
+                    
+                    if 'target' not in edge:
+                        edge_errors.append(f"Edge {i} missing 'target'")
+                    elif edge['target'] not in node_ids:
+                        edge_errors.append(f"Edge {i} target '{edge['target']}' references non-existent node")
+                    
+                    if 'relation' not in edge:
+                        edge_errors.append(f"Edge {i} missing 'relation'")
+                    elif edge['relation'] not in VALID_RELATION_TYPES:
+                        errors.append(f"Edge {i} has invalid relation '{edge['relation']}'. Valid relations: {VALID_RELATION_TYPES}")
+                        # Default to relates_to
+                        edge['relation'] = 'relates_to'
+                    
+                    if not edge_errors:
+                        valid_edges.append(edge)
+                    else:
+                        errors.extend(edge_errors)
+                
+                graph['edges'] = valid_edges
+    
+    is_valid = len(errors) == 0
+    return is_valid, fixed_data, errors
 
 # ============ Vector Database Functions ============
 
@@ -185,22 +345,72 @@ def distill():
 
         print(f"⏱️  Distilling text: {text[:100]}...")
         
-        # Call LLM API
+        # 调用 LLM API
         llm_start = time.time()
-        response = llm_client.chat.completions.create(
-            model=LLM_MODEL,
-            messages=[
+        
+        # 构建请求参数（某些模型不支持 response_format）
+        request_params = {
+            "model": LLM_MODEL,
+            "messages": [
                 {"role": "system", "content": DISTILL_SYSTEM_PROMPT},
                 {"role": "user", "content": f"Distill this idea:\n\n{text}"}
             ],
-            temperature=0.7,
-            response_format={"type": "json_object"}
-        )
+            "temperature": 0.7
+        }
+        
+        # 只有 OpenAI 和部分兼容模型支持 response_format
+        # DeepSeek 等模型可能不支持，所以我们在提示词中明确要求 JSON
+        try:
+            request_params["response_format"] = {"type": "json_object"}
+            response = llm_client.chat.completions.create(**request_params)
+        except Exception as e:
+            print(f"⚠️  response_format 不支持，使用普通模式: {e}")
+            del request_params["response_format"]
+            response = llm_client.chat.completions.create(**request_params)
+        
         llm_time = time.time() - llm_start
         print(f"   LLM call: {llm_time:.2f}s")
         
         result_text = response.choices[0].message.content
-        distilled = json.loads(result_text)
+        
+        # 调试：打印 LLM 返回的原始内容
+        print(f"   LLM raw response: {result_text[:200]}...")
+        
+        # 尝试解析 JSON
+        try:
+            distilled = json.loads(result_text)
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON 解析失败: {e}")
+            print(f"   原始响应: {result_text}")
+            # 尝试提取 JSON（有些模型会在 markdown 代码块中返回 JSON）
+            if "```json" in result_text:
+                json_start = result_text.find("```json") + 7
+                json_end = result_text.find("```", json_start)
+                result_text = result_text[json_start:json_end].strip()
+                print(f"   提取的 JSON: {result_text[:200]}...")
+                distilled = json.loads(result_text)
+            elif "```" in result_text:
+                json_start = result_text.find("```") + 3
+                json_end = result_text.find("```", json_start)
+                result_text = result_text[json_start:json_end].strip()
+                print(f"   提取的 JSON: {result_text[:200]}...")
+                distilled = json.loads(result_text)
+            else:
+                raise
+        
+        # 验证并修复蒸馏数据
+        validation_start = time.time()
+        is_valid, fixed_distilled, validation_errors = validate_and_fix_distilled_data(distilled)
+        validation_time = time.time() - validation_start
+        
+        if validation_errors:
+            print(f"⚠️  Validation issues found ({len(validation_errors)}): {validation_errors[:3]}")
+            print(f"   Validation & fix: {validation_time:.3f}s")
+        else:
+            print(f"✅ Schema validation passed: {validation_time:.3f}s")
+        
+        # Use fixed data
+        distilled = fixed_distilled
         
         # Generate embedding for the idea
         emb_start = time.time()

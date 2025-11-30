@@ -1,6 +1,11 @@
 # 实施计划
 
-- [ ] 1. 升级蒸馏引擎使用 PRD 提示词
+- [x] 1. 升级蒸馏引擎使用 PRD 提示词
+
+
+
+
+
   - 将 backend/app.py 中的 DISTILL_SYSTEM_PROMPT 替换为 PRD 定义的完整提示词模板
   - 添加实体类型验证（Concept、Tool、Person、Problem、Solution、Methodology、Metric）
   - 添加关系类型验证（solves、causes、contradicts、consists_of、depends_on、enables、disrupts、powered_by、relates_to）
@@ -16,7 +21,9 @@
   - **属性 3：One-liner 字数约束**
   - **验证：需求 1.4**
 
-- [ ] 2. 实现图谱级别管理系统
+- [-] 2. 实现图谱级别管理系统
+
+
   - 创建 utils/graphLevelManager.ts 工具类
   - 实现 Level 1 数据转换（想法节点 + 相似度边）
   - 实现 Level 2 数据转换（实体节点 + 关系边）

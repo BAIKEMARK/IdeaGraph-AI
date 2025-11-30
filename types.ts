@@ -1,3 +1,25 @@
+// Entity types for graph nodes
+export type EntityType = 
+  | 'Concept' 
+  | 'Tool' 
+  | 'Person' 
+  | 'Problem' 
+  | 'Solution' 
+  | 'Methodology' 
+  | 'Metric';
+
+// Relation types for graph edges
+export type RelationType = 
+  | 'solves' 
+  | 'causes' 
+  | 'contradicts' 
+  | 'consists_of' 
+  | 'depends_on'
+  | 'enables'
+  | 'disrupts'
+  | 'powered_by'
+  | 'relates_to';
+
 export interface GraphNode {
   id: string;
   name: string;
@@ -31,7 +53,12 @@ export interface Idea {
   distilled_data: DistilledData;
   embedding_vector?: number[];
   linked_idea_ids?: string[];
+  parent_idea_id?: string;      // For split ideas
+  child_idea_ids?: string[];    // For ideas that have been split
+  merged_from_ids?: string[];   // For merged ideas
   chat_history?: ChatMessage[];
+  last_modified?: string;       // ISO timestamp
+  version?: number;             // For tracking refinements
 }
 
 export interface ChatMessage {

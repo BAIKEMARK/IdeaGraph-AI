@@ -5,7 +5,7 @@ import { GraphView } from './components/GraphView';
 import { IdeaList } from './components/IdeaList';
 import { ChatPanel } from './components/ChatPanel';
 import { RelatedIdeas } from './components/RelatedIdeas';
-import { distillIdeaFromText, saveIdeaToVectorDB, getAllIdeas } from './services/geminiService';
+import { distillIdeaFromText, saveIdeaToVectorDB, getAllIdeas } from './services/apiService';
 import { Idea, DistilledData } from './types';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 

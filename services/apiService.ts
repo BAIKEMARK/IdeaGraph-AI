@@ -3,6 +3,11 @@ import { DistilledData, Idea } from "../types";
 // Configuration for Backend URL
 const BACKEND_URL = "http://localhost:5000/api";
 
+/**
+ * API Service for IdeaGraph Backend
+ * Handles all communication with the Flask backend server
+ */
+
 export async function distillIdeaFromText(text: string): Promise<DistilledData> {
   try {
     const response = await fetch(`${BACKEND_URL}/distill`, {

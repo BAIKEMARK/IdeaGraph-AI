@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Idea } from '../types';
-import { searchSimilarIdeas } from '../services/geminiService';
+import { searchSimilarIdeas } from '../services/apiService';
 import { Link2, Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 

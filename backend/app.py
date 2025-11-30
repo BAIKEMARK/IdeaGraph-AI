@@ -288,28 +288,68 @@ def cosine_similarity(vec1, vec2):
     """Calculate cosine similarity between two vectors"""
     vec1 = np.array(vec1)
     vec2 = np.array(vec2)
-    return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+    
+    # Calculate norms
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    
+    # Handle zero vectors
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    
+    # Calculate cosine similarity
+    similarity = np.dot(vec1, vec2) / (norm1 * norm2)
+    
+    # Clamp to [-1, 1] to handle floating point errors
+    return float(np.clip(similarity, -1.0, 1.0))
 
 def search_similar_ideas(query_embedding, top_k=3, exclude_id=None):
     """Search for similar ideas using cosine similarity"""
-    vectors, ideas = load_vector_db()
-    
-    if not vectors:
+    try:
+        vectors, ideas = load_vector_db()
+        
+        if not vectors:
+            print("⚠️  Vector database is empty")
+            return []
+        
+        query_vec = np.array(query_embedding)
+        similarities = []
+        
+        for idea_id, vec in vectors.items():
+            if idea_id == exclude_id:
+                continue
+            
+            try:
+                # Ensure vec is a numpy array
+                vec = np.array(vec)
+                
+                # Check dimensions match
+                if len(query_vec) != len(vec):
+                    print(f"⚠️  Dimension mismatch for idea {idea_id}: query={len(query_vec)}, stored={len(vec)}")
+                    continue
+                
+                sim = cosine_similarity(query_vec, vec)
+                
+                # Get idea data, handle missing ideas
+                if idea_id in ideas:
+                    similarities.append((idea_id, sim, ideas[idea_id]))
+                else:
+                    print(f"⚠️  Idea {idea_id} has vector but no data")
+                    
+            except Exception as e:
+                print(f"⚠️  Error calculating similarity for idea {idea_id}: {e}")
+                continue
+        
+        # Sort by similarity (descending)
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        
+        return similarities[:top_k]
+        
+    except Exception as e:
+        print(f"❌ Error in search_similar_ideas: {e}")
+        import traceback
+        print(traceback.format_exc())
         return []
-    
-    query_vec = np.array(query_embedding)
-    similarities = []
-    
-    for idea_id, vec in vectors.items():
-        if idea_id == exclude_id:
-            continue
-        sim = cosine_similarity(query_vec, vec)
-        similarities.append((idea_id, sim, ideas[idea_id]))
-    
-    # Sort by similarity (descending)
-    similarities.sort(key=lambda x: x[1], reverse=True)
-    
-    return similarities[:top_k]
 
 def traverse_graph(idea_data, max_depth=1):
     """Traverse the graph structure to find related concepts"""
@@ -472,6 +512,7 @@ def save_idea():
 def search_similar():
     """Search for similar ideas using vector similarity"""
     import time
+    import traceback
     start_time = time.time()
     
     try:
@@ -502,6 +543,8 @@ def search_similar():
         return jsonify({"results": results})
     
     except Exception as e:
+        print(f"❌ Search similar error: {e}")
+        print(f"   Traceback: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
 import { Idea, ChatMessage } from '../types';
-import { chatWithIdea } from '../services/geminiService';
+import { chatWithIdea } from '../services/apiService';
 import { v4 as uuidv4 } from 'uuid';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -34,7 +34,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ idea, onUpdateIdea }) => {
         timestamp: new Date()
       }]);
     }
-  }, [idea.idea_id, t]);
+  }, [idea.idea_id]); // 只依赖 idea_id，避免因翻译函数变化导致重置
 
   // Auto scroll
   useEffect(() => {

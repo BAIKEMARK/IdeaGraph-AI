@@ -49,7 +49,27 @@ export const translations = {
     merge_success: "Ideas merged successfully!",
     split_success: "Idea split successfully!",
     refine_success: "Idea refined successfully!",
-    evolution_error: "Evolution operation failed. Please try again."
+    evolution_error: "Evolution operation failed. Please try again.",
+    // Multi-select
+    selected: "selected",
+    select_mode: "Multi-select",
+    select_all: "Select All",
+    clear: "Clear",
+    chat_with_selected: "Chat with selected ideas",
+    chat: "Chat",
+    // Delete and Clear
+    delete: "Delete",
+    confirm_delete: "Are you sure you want to delete this idea?",
+    delete_success: "Idea deleted successfully",
+    delete_error: "Failed to delete idea",
+    delete_selected: "Delete selected ideas",
+    confirm_delete_batch: "Are you sure you want to delete the selected ideas?",
+    selected_count: "{0} ideas selected",
+    delete_batch_success: "{0} ideas deleted successfully",
+    clear_chat: "Clear Chat",
+    confirm_clear_chat: "Are you sure you want to clear the chat history?",
+    error_clear_chat: "Failed to clear chat history",
+    chat_workbench: "Chat Workbench"
   },
   zh: {
     app_title: "灵感图谱 AI",
@@ -99,6 +119,26 @@ export const translations = {
     merge_success: "想法合并成功！",
     split_success: "想法拆分成功！",
     refine_success: "想法精炼成功！",
-    evolution_error: "进化操作失败。请重试。"
+    evolution_error: "进化操作失败。请重试。",
+    // Multi-select
+    selected: "已选择",
+    select_mode: "多选模式",
+    select_all: "全选",
+    clear: "清除",
+    chat_with_selected: "与选中想法聊天",
+    chat: "聊天",
+    // Delete and Clear
+    delete: "删除",
+    confirm_delete: "确定要删除这个想法吗？",
+    delete_success: "想法已删除",
+    delete_error: "删除失败",
+    delete_selected: "删除选中",
+    confirm_delete_batch: "确定要删除选中的想法吗？",
+    selected_count: "已选择 {0} 个想法",
+    delete_batch_success: "已成功删除 {0} 个想法",
+    clear_chat: "清除聊天",
+    confirm_clear_chat: "确定要清除聊天记录吗？",
+    error_clear_chat: "清除聊天记录失败",
+    chat_workbench: "对话工作台"
   }
 };

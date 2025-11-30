@@ -60,7 +60,9 @@
   - **属性 26：边的视觉属性与相似度相关**
   - **验证：需求 11.3、11.4**
 
-- [-] 4. 创建进化命令 UI 组件
+- [x] 4. 创建进化命令 UI 组件
+
+
 
 
 
@@ -76,7 +78,11 @@
   - **属性 8：多选时启用合并按钮**
   - **验证：需求 4.1**
 
-- [ ] 5. 实现多选想法列表
+- [x] 5. 实现多选想法列表
+
+
+
+
   - 修改 components/IdeaList.tsx 添加复选框
   - 添加选择状态管理（selectedIds: Set<string>）
   - 实现 onToggleSelection、onSelectAll、onClearSelection
@@ -121,7 +127,12 @@
   - **属性 13：拆分建立父子关系**
   - **验证：需求 5.4、5.5**
 
-- [ ] 7. 添加进化命令 API 端点
+- [x] 7. 添加进化命令 API 端点
+
+
+
+
+
   - 在 backend/app.py 添加 /api/merge_ideas 端点
   - 在 backend/app.py 添加 /api/split_idea 端点
   - 在 backend/app.py 添加 /api/refine_idea 端点
@@ -129,16 +140,26 @@
   - 添加操作日志记录
   - _需求：3.3、3.4、4.2、4.3、5.2、5.3、5.4、5.5_
 
-- [ ] 8. 连接前端进化命令到后端
-  - 在 services/geminiService.ts 添加 mergeIdeas() 函数
-  - 在 services/geminiService.ts 添加 splitIdea() 函数
-  - 在 services/geminiService.ts 添加 refineIdea() 函数
+- [x] 8. 连接前端进化命令到后端
+
+
+
+
+
+  - 在 services/apiService.ts 添加 mergeIdeas() 函数
+  - 在 services/apiService.ts 添加 splitIdea() 函数
+  - 在 services/apiService.ts 添加 refineIdea() 函数
   - 在 App.tsx 集成进化命令处理
   - 实现 UI 更新和状态刷新
   - 添加成功/错误通知
   - _需求：3.3、3.4、4.2、4.3、5.2、5.3、5.4、5.5_
+-
 
-- [ ] 9. 升级 RAG 引擎使用 PRD 提示词
+- [x] 9. 升级 RAG 引擎使用 PRD 提示词
+
+
+
+
   - 将 backend/app.py 中的 CHAT_SYSTEM_PROMPT 替换为 PRD 定义的模板
   - 实现上下文构建包含图谱数据和文档片段
   - 添加引用标记 [n] 到响应

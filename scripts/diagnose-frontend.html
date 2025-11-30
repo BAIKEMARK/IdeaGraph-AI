@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Diagnosis</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e293b; color: #e2e8f0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #4f46e5; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #4338ca; }
+        pre { background: #0f172a; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Frontend Diagnosis Tool</h1>
+    
+    <div>
+        <button onclick="testHealth()">1. Test Backend Health</button>
+        <button onclick="testGetAllIdeas()">2. Test Get All Ideas</button>
+        <button onclick="testCORS()">3. Test CORS</button>
+        <button onclick="clearResults()">Clear</button>
+    </div>
+    
+    <h2>Results:</h2>
+    <pre id="results"></pre>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:5000/api';
+        const results = document.getElementById('results');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
+            results.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+        }
+        
+        function clearResults() {
+            results.innerHTML = '';
+        }
+        
+        async function testHealth() {
+            log('Testing backend health...', 'info');
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`);
+                const data = await response.json();
+                log(`✅ Backend is ${data.status}`, 'success');
+                log(`   Ideas count: ${data.ideas_count}`, 'info');
+                log(`   API configured: ${data.api_configured}`, 'info');
+                log(JSON.stringify(data, null, 2), 'info');
+            } catch (error) {
+                log(`❌ Health check failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetAllIdeas() {
+            log('Testing get_all_ideas endpoint...', 'info');
+            try {
+                const response = await fetch(`${BACKEND_URL}/get_all_ideas`);
+                log(`   Response status: ${response.status}`, 'info');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                log(`✅ Retrieved ${data.ideas.length} ideas`, 'success');
+                
+                if (data.ideas.length > 0) {
+                    log('   First idea:', 'info');
+                    const first = data.ideas[0];
+                    log(`   - ID: ${first.idea_id}`, 'info');
+                    log(`   - One-liner: ${first.distilled_data?.one_liner}`, 'info');
+                    log(`   - Tags: ${first.distilled_data?.tags?.join(', ')}`, 'info');
+                }
+                
+                log(JSON.stringify(data, null, 2), 'info');
+            } catch (error) {
+                log(`❌ Get all ideas failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCORS() {
+            log('Testing CORS configuration...', 'info');
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                };
+                
+                log('✅ CORS headers:', 'success');
+                log(JSON.stringify(corsHeaders, null, 2), 'info');
+            } catch (error) {
+                log(`❌ CORS test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run tests on load
+        window.onload = () => {
+            log('🚀 Starting automatic diagnostics...', 'info');
+            setTimeout(testHealth, 500);
+            setTimeout(testGetAllIdeas, 1500);
+            setTimeout(testCORS, 2500);
+        };
+    </script>
+</body>
+</html>

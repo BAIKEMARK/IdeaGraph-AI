@@ -110,7 +110,21 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
     // Deep copy data for D3 mutation
     const nodes: D3IdeaNode[] = level1Data.nodes.map(d => ({ ...d }));
-    const links: D3SimilarityLink[] = level1Data.edges.map(d => ({ 
+    
+    // Validate and filter links to ensure all referenced nodes exist
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const validLinks = level1Data.edges.filter(edge => {
+      const sourceExists = nodeIds.has(edge.source);
+      const targetExists = nodeIds.has(edge.target);
+      
+      if (!sourceExists || !targetExists) {
+        console.warn(`Invalid similarity edge found: ${edge.source} -> ${edge.target}. Source exists: ${sourceExists}, Target exists: ${targetExists}`);
+        return false;
+      }
+      return true;
+    });
+    
+    const links: D3SimilarityLink[] = validLinks.map(d => ({ 
       ...d,
       similarity: d.similarity 
     }));
@@ -124,6 +138,9 @@ export const GraphView: React.FC<GraphViewProps> = ({
       });
     
     svg.call(zoom as any);
+
+    // Add defs for filters and gradients
+    const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
 
     // Simulation
     const simulation = d3.forceSimulation<D3IdeaNode>(nodes)
@@ -141,29 +158,60 @@ export const GraphView: React.FC<GraphViewProps> = ({
       .domain([level1Data.metadata.similarityThreshold, 1])
       .range([0.3, 0.9]);
 
-    // Draw Links with similarity-based styling
+    // Draw Links with similarity-based styling and modern effects
     const link = g.append("g")
-      .attr("stroke", "#475569")
       .selectAll("line")
       .data(links)
       .join("line")
+      .attr("stroke", "#64748b")
       .attr("stroke-width", d => thicknessScale(d.similarity))
-      .attr("stroke-opacity", d => opacityScale(d.similarity))
-      .style("cursor", "pointer");
+      .attr("stroke-opacity", d => opacityScale(d.similarity) * 0.6)
+      .attr("stroke-linecap", "round")
+      .style("cursor", "pointer")
+      .on("mouseenter", function(event, d) {
+        // Highlight connection on hover
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("stroke", "#8b5cf6")
+          .attr("stroke-opacity", 0.8)
+          .attr("stroke-width", Math.max(thicknessScale(d.similarity), 3));
+      })
+      .on("mouseleave", function(event, d) {
+        // Remove highlight
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("stroke", "#64748b")
+          .attr("stroke-opacity", opacityScale(d.similarity) * 0.6)
+          .attr("stroke-width", thicknessScale(d.similarity));
+      });
 
     // Tooltip for edges showing similarity score
     link.append("title")
       .text(d => `Similarity: ${(d.similarity * 100).toFixed(1)}%`);
 
-    // Draw Nodes (Idea nodes)
+    // Add glow filter definition
+    const glowFilter = defs.append("filter")
+      .attr("id", "glow")
+      .attr("x", "-50%")
+      .attr("y", "-50%")
+      .attr("width", "200%")
+      .attr("height", "200%");
+    
+    glowFilter.append("feGaussianBlur")
+      .attr("stdDeviation", "3")
+      .attr("result", "coloredBlur");
+    
+    const feMerge = glowFilter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "coloredBlur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+    // Draw Nodes (Idea nodes) with modern styling
     const node = g.append("g")
-      .attr("stroke", "#1e293b")
-      .attr("stroke-width", 2)
-      .selectAll("circle")
+      .selectAll("g")
       .data(nodes)
-      .join("circle")
-      .attr("r", 20)
-      .attr("fill", "#6366f1") // Indigo for idea nodes
+      .join("g")
       .attr("cursor", "pointer")
       .on("click", (event, d) => {
         event.stopPropagation();
@@ -171,6 +219,44 @@ export const GraphView: React.FC<GraphViewProps> = ({
           onNodeClick(d.id);
         }
       })
+      .on("mouseenter", function(event, d) {
+        // Highlight effect on hover
+        d3.select(this).select("circle")
+          .transition()
+          .duration(200)
+          .attr("r", 25)
+          .attr("filter", "url(#glow)");
+      })
+      .on("mouseleave", function(event, d) {
+        // Remove highlight
+        d3.select(this).select("circle")
+          .transition()
+          .duration(200)
+          .attr("r", 20)
+          .attr("filter", null);
+      });
+
+    // Add gradient for nodes
+    const gradient = defs.append("radialGradient")
+      .attr("id", "nodeGradient")
+      .attr("cx", "30%")
+      .attr("cy", "30%");
+    
+    gradient.append("stop")
+      .attr("offset", "0%")
+      .attr("stop-color", "#8b5cf6");
+    
+    gradient.append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "#6366f1");
+
+    // Main node circle
+    node.append("circle")
+      .attr("r", 20)
+      .attr("fill", "url(#nodeGradient)")
+      .attr("stroke", "#a855f7")
+      .attr("stroke-width", 2)
+      .attr("stroke-opacity", 0.8)
       // Drag behavior
       .call(d3.drag<SVGCircleElement, D3IdeaNode>()
         .on("start", (event, d) => {
@@ -215,8 +301,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
         .attr("y2", d => (d.target as D3IdeaNode).y!);
 
       node
-        .attr("cx", d => d.x!)
-        .attr("cy", d => d.y!);
+        .attr("transform", d => `translate(${d.x!},${d.y!})`);
 
       label
         .attr("x", d => d.x!)
@@ -224,7 +309,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
     });
 
     // Add smooth transition animation
-    node
+    node.select("circle")
       .attr("r", 0)
       .transition()
       .duration(500)
@@ -251,18 +336,51 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
     // Deep copy data for D3 mutation
     const nodes: D3EntityNode[] = level2Data.nodes.map(d => ({ ...d }));
-    const links: D3RelationLink[] = level2Data.edges.map(d => ({ ...d }));
+    
+    // Validate and filter links to ensure all referenced nodes exist
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const validLinks = level2Data.edges.filter(edge => {
+      const sourceExists = nodeIds.has(edge.source);
+      const targetExists = nodeIds.has(edge.target);
+      
+      if (!sourceExists || !targetExists) {
+        console.warn(`Invalid edge found: ${edge.source} -> ${edge.target}. Source exists: ${sourceExists}, Target exists: ${targetExists}`);
+        return false;
+      }
+      return true;
+    });
+    
+    const links: D3RelationLink[] = validLinks.map(d => ({ ...d }));
 
-    // Color Scale based on entity type
+    // Add defs for filters and gradients
+    const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
+
+    // Modern color palette for entity types with gradients
     const colorMap: Record<string, string> = {
       'Concept': '#8b5cf6',     // Purple
-      'Tool': '#3b82f6',        // Blue
+      'Tool': '#06b6d4',        // Cyan  
       'Person': '#f59e0b',      // Amber
       'Problem': '#ef4444',     // Red
-      'Solution': '#10b981',    // Green
-      'Methodology': '#06b6d4', // Cyan
+      'Solution': '#10b981',    // Emerald
+      'Methodology': '#3b82f6', // Blue
       'Metric': '#ec4899',      // Pink
     };
+
+    // Create gradients for each entity type
+    Object.entries(colorMap).forEach(([type, color]) => {
+      const gradient = defs.append("radialGradient")
+        .attr("id", `gradient-${type}`)
+        .attr("cx", "30%")
+        .attr("cy", "30%");
+      
+      gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", d3.color(color)?.brighter(0.5)?.toString() || color);
+      
+      gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", color);
+    });
 
     // Zoom behavior
     const g = svg.append("g");
@@ -318,16 +436,52 @@ export const GraphView: React.FC<GraphViewProps> = ({
         .attr("fill", "#94a3b8")
         .text(d => d.relation);
 
-    // Draw Nodes
+    // Add glow filter for Level 2 nodes
+    const glowFilter2 = defs.append("filter")
+      .attr("id", "glow2")
+      .attr("x", "-50%")
+      .attr("y", "-50%")
+      .attr("width", "200%")
+      .attr("height", "200%");
+    
+    glowFilter2.append("feGaussianBlur")
+      .attr("stdDeviation", "2")
+      .attr("result", "coloredBlur");
+    
+    const feMerge2 = glowFilter2.append("feMerge");
+    feMerge2.append("feMergeNode").attr("in", "coloredBlur");
+    feMerge2.append("feMergeNode").attr("in", "SourceGraphic");
+
+    // Draw Nodes with modern styling
     const node = g.append("g")
-      .attr("stroke", "#1e293b")
-      .attr("stroke-width", 1.5)
-      .selectAll("circle")
+      .selectAll("g")
       .data(nodes)
-      .join("circle")
-      .attr("r", 15)
-      .attr("fill", d => colorMap[d.type] || '#6366f1')
+      .join("g")
       .attr("cursor", "pointer")
+      .on("mouseenter", function(event, d) {
+        // Highlight effect on hover
+        d3.select(this).select("circle")
+          .transition()
+          .duration(200)
+          .attr("r", 18)
+          .attr("filter", "url(#glow2)");
+      })
+      .on("mouseleave", function(event, d) {
+        // Remove highlight
+        d3.select(this).select("circle")
+          .transition()
+          .duration(200)
+          .attr("r", 15)
+          .attr("filter", null);
+      });
+
+    // Main node circles with gradients
+    node.append("circle")
+      .attr("r", 15)
+      .attr("fill", d => `url(#gradient-${d.type})`)
+      .attr("stroke", d => d3.color(colorMap[d.type] || '#6366f1')?.brighter(0.3)?.toString() || '#a855f7')
+      .attr("stroke-width", 1.5)
+      .attr("stroke-opacity", 0.8)
       // Drag behavior
       .call(d3.drag<SVGCircleElement, D3EntityNode>()
         .on("start", (event, d) => {
@@ -372,8 +526,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
         .attr("y2", d => (d.target as D3EntityNode).y!);
 
       node
-        .attr("cx", d => d.x!)
-        .attr("cy", d => d.y!);
+        .attr("transform", d => `translate(${d.x!},${d.y!})`);
 
       label
         .attr("x", d => d.x!)
@@ -385,7 +538,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
     });
 
     // Add smooth transition animation
-    node
+    node.select("circle")
       .attr("r", 0)
       .transition()
       .duration(500)
@@ -543,14 +696,23 @@ export const GraphView: React.FC<GraphViewProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="w-full h-full bg-slate-950 overflow-hidden relative">
-      <svg ref={svgRef} className="w-full h-full block" />
+    <div ref={containerRef} className="w-full h-full bg-gradient-to-br from-zinc-950 via-slate-950 to-zinc-900 overflow-hidden relative">
+      {/* Subtle dot grid background */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `radial-gradient(circle, rgba(148, 163, 184, 0.1) 1px, transparent 1px)`,
+          backgroundSize: '20px 20px'
+        }}
+      />
+      
+      <svg ref={svgRef} className="w-full h-full block relative z-10" />
       
       {/* Back to Level 1 button when in Level 2 */}
       {renderingMode === 2 && graphData && onBackToLevel1 && (
         <button
           onClick={onBackToLevel1}
-          className="absolute top-4 left-4 flex items-center space-x-2 px-3 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-md text-sm font-medium transition-colors backdrop-blur border border-slate-700"
+          className="absolute top-4 left-4 flex items-center space-x-2 px-4 py-2.5 bg-zinc-900/80 hover:bg-zinc-800/90 text-zinc-200 rounded-xl text-sm font-medium transition-all backdrop-blur-md border border-white/10 shadow-lg hover:shadow-xl active:scale-95"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Overview</span>

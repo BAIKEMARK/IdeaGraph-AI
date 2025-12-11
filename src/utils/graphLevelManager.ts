@@ -184,13 +184,18 @@ export class GraphLevelManager {
    * Generate Level 1 graph data (idea nodes + similarity edges)
    */
   private getLevel1Data(): Level1GraphData {
-    // Convert ideas to nodes
-    const nodes: IdeaNode[] = this.ideas.map(idea => ({
-      id: idea.idea_id,
-      label: idea.distilled_data.one_liner,
-      tags: idea.distilled_data.tags,
-      type: 'idea' as const,
-    }));
+    // Convert ideas to nodes, filtering out invalid ideas
+    const nodes: IdeaNode[] = this.ideas
+      .filter(idea => idea && idea.idea_id && idea.distilled_data?.one_liner)
+      .map(idea => ({
+        id: idea.idea_id,
+        label: idea.distilled_data.one_liner,
+        tags: idea.distilled_data.tags || [],
+        type: 'idea' as const,
+      }));
+
+    // Create a set of valid node IDs for edge validation
+    const nodeIds = new Set(nodes.map(n => n.id));
 
     // Calculate similarity edges
     const edges: SimilarityEdge[] = [];
@@ -200,21 +205,36 @@ export class GraphLevelManager {
         const idea1 = this.ideas[i];
         const idea2 = this.ideas[j];
         
+        // Validate ideas and their IDs
+        if (!idea1?.idea_id || !idea2?.idea_id) {
+          console.warn('Invalid idea found during similarity calculation:', { idea1: idea1?.idea_id, idea2: idea2?.idea_id });
+          continue;
+        }
+
+        // Ensure both ideas exist in our node set
+        if (!nodeIds.has(idea1.idea_id) || !nodeIds.has(idea2.idea_id)) {
+          continue;
+        }
+        
         // Only calculate similarity if both ideas have embedding vectors
         if (idea1.embedding_vector && idea2.embedding_vector) {
-          const similarity = this.calculateCosineSimilarity(
-            idea1.embedding_vector,
-            idea2.embedding_vector
-          );
-          
-          // Only include edges above threshold
-          if (similarity >= this.config.similarityThreshold) {
-            edges.push({
-              source: idea1.idea_id,
-              target: idea2.idea_id,
-              similarity,
-              type: 'similarity' as const,
-            });
+          try {
+            const similarity = this.calculateCosineSimilarity(
+              idea1.embedding_vector,
+              idea2.embedding_vector
+            );
+            
+            // Only include edges above threshold
+            if (similarity >= this.config.similarityThreshold) {
+              edges.push({
+                source: idea1.idea_id,
+                target: idea2.idea_id,
+                similarity,
+                type: 'similarity' as const,
+              });
+            }
+          } catch (error) {
+            console.warn(`Error calculating similarity between ${idea1.idea_id} and ${idea2.idea_id}:`, error);
           }
         }
       }
@@ -242,21 +262,53 @@ export class GraphLevelManager {
 
     const graphStructure = idea.distilled_data.graph_structure;
 
-    // Convert nodes to EntityNode format
-    const nodes: EntityNode[] = graphStructure.nodes.map(node => ({
-      id: node.id,
-      label: node.name,
-      type: node.type as EntityType,
-      desc: node.desc,
-    }));
+    // Validate graph structure
+    if (!graphStructure || !graphStructure.nodes || !graphStructure.edges) {
+      console.warn(`Invalid graph structure for idea ${ideaId}`, graphStructure);
+      return {
+        level: 2,
+        focusedIdeaId: ideaId,
+        nodes: [],
+        edges: [],
+        metadata: {
+          ideaOneLiner: idea.distilled_data.one_liner,
+          ideaTags: idea.distilled_data.tags,
+        },
+      };
+    }
 
-    // Convert edges to RelationEdge format
-    const edges: RelationEdge[] = graphStructure.edges.map(edge => ({
-      source: edge.source,
-      target: edge.target,
-      relation: edge.relation as RelationType,
-      desc: edge.desc,
-    }));
+    // Convert nodes to EntityNode format
+    const nodes: EntityNode[] = graphStructure.nodes
+      .filter(node => node && node.id && node.name) // Filter out invalid nodes
+      .map(node => ({
+        id: node.id,
+        label: node.name,
+        type: node.type as EntityType,
+        desc: node.desc || '',
+      }));
+
+    // Create a set of valid node IDs for edge validation
+    const nodeIds = new Set(nodes.map(n => n.id));
+
+    // Convert edges to RelationEdge format, filtering out invalid edges
+    const edges: RelationEdge[] = graphStructure.edges
+      .filter(edge => {
+        if (!edge || !edge.source || !edge.target) {
+          console.warn(`Invalid edge structure:`, edge);
+          return false;
+        }
+        if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
+          console.warn(`Edge references non-existent nodes: ${edge.source} -> ${edge.target}`);
+          return false;
+        }
+        return true;
+      })
+      .map(edge => ({
+        source: edge.source,
+        target: edge.target,
+        relation: edge.relation as RelationType,
+        desc: edge.desc || '',
+      }));
 
     return {
       level: 2,

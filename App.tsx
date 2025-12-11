@@ -6,6 +6,7 @@ import { IdeaList } from './components/IdeaList';
 import { ChatPanel } from './components/ChatPanel';
 import { RelatedIdeas } from './components/RelatedIdeas';
 import { EvolutionCommandUI } from './components/EvolutionCommandUI';
+import { HeroSection } from './components/HeroSection';
 import { distillIdeaFromText, saveIdeaToVectorDB, getAllIdeas, mergeIdeas, splitIdea, refineIdea } from './services/apiService';
 import { Idea, DistilledData } from './types';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
@@ -61,6 +62,7 @@ function AppContent() {
   const [graphLevelManager] = useState(() => new GraphLevelManager());
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [similarityThreshold, setSimilarityThreshold] = useState(0.7);
+  const [showHero, setShowHero] = useState(false);
 
   const selectedIdea = ideas.find(i => i.idea_id === selectedIdeaId) || null;
 
@@ -87,8 +89,12 @@ function AppContent() {
         console.log(`✅ Loaded ${savedIdeas.length} ideas from backend`);
         if (savedIdeas.length > 0) {
           setIdeas(savedIdeas);
+          setShowHero(false);
           // 不自动选择第一个想法，保持 null 以显示 Level 1
           // setSelectedIdeaId(savedIdeas[0].idea_id);
+        } else {
+          // Show hero when no ideas exist
+          setShowHero(true);
         }
       } catch (err) {
         console.warn("Failed to load ideas from backend, using mock data:", err);
@@ -191,11 +197,25 @@ function AppContent() {
       setIdeas(prev => [newIdea, ...prev]);
       setSelectedIdeaId(newIdea.idea_id);
       setInputText('');
+      
+      // Hide hero when first idea is created
+      if (showHero) {
+        setShowHero(false);
+      }
     } catch (err) {
       console.error("Failed to create idea:", err);
       setError(t('error_failed_distill'));
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleGetStarted = () => {
+    setShowHero(false);
+    // Focus on the input area
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      textarea.focus();
     }
   };
 
@@ -498,6 +518,8 @@ function AppContent() {
 
   return (
     <div className="flex h-screen w-full bg-slate-950 text-slate-200 font-sans">
+      {/* Hero Section - shown when no ideas exist */}
+      <HeroSection show={showHero} onGetStarted={handleGetStarted} />
       {/* Sidebar: List & Input */}
       <div className="w-80 flex flex-col border-r border-slate-800 bg-slate-900/50 backdrop-blur-sm z-10">
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">

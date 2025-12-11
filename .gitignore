@@ -16,6 +16,7 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+config/.env
 
 # Python
 __pycache__/

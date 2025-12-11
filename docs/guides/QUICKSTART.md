@@ -1,20 +1,20 @@
-# 快速开始 - Graph RAG 功能
+# Quick Start - Graph RAG Features
 
-## 安装依赖
+## Install Dependencies
 
-### 后端
+### Backend
 ```bash
 pip install -r backend/requirements.txt
 ```
 
-### 前端
+### Frontend
 ```bash
 npm install
 ```
 
-## 配置 API
+## Configure API
 
-复制 `.env.example` 到 `.env.local` 并填入你的 API 密钥：
+Copy `config/.env.example` to `config/.env` and fill in your API keys:
 
 ```env
 LLM_API_KEY=your_api_key_here
@@ -26,108 +26,111 @@ EMBEDDING_BASE_URL=https://api.openai.com/v1
 EMBEDDING_MODEL=text-embedding-3-small
 ```
 
-## 启动应用
+## Start the Application
 
-### 1. 启动后端（终端 1）
+### 1. Start Backend (Terminal 1)
 ```bash
-python backend/app.py
+cd backend
+python app.py
 ```
 
-后端将运行在 `http://localhost:5000`
+Backend will run on `http://localhost:5000`
 
-### 2. 启动前端（终端 2）
+### 2. Start Frontend (Terminal 2)
 ```bash
 npm run dev
 ```
 
-前端将运行在 `http://localhost:5173`
+Frontend will run on `http://localhost:3000`
 
-## 测试 Graph RAG
+## Test Graph RAG
 
-### 方法 1: 使用测试脚本
+### Method 1: Use Test Script
 ```bash
-python backend/test_rag.py
+cd backend/tests
+python test_rag.py
 ```
 
-这将测试：
-- ✅ 后端健康检查
-- ✅ 想法提炼和 embedding 生成
-- ✅ 向量数据库保存
-- ✅ 相似度搜索
-- ✅ RAG 增强对话
+This will test:
+- ✅ Backend health check
+- ✅ Idea distillation and embedding generation
+- ✅ Vector database saving
+- ✅ Similarity search
+- ✅ RAG-enhanced conversation
 
-### 方法 2: 在浏览器中测试
+### Method 2: Test in Browser
 
-1. **创建第一个想法**
-   - 在左侧输入框输入：
+1. **Create First Idea**
+   - Enter in the left input box:
      ```
-     区块链技术通过去中心化的方式，让用户掌握自己的数字身份，
-     不再依赖 Google 或 Facebook 等中心化平台。
+     Blockchain technology enables users to control their digital identity 
+     through decentralization, no longer relying on centralized platforms 
+     like Google or Facebook.
      ```
-   - 点击"捕获"按钮
-   - 观察生成的知识图谱
+   - Click "Capture" button
+   - Observe the generated knowledge graph
 
-2. **创建第二个想法**
-   - 输入相关主题：
+2. **Create Second Idea**
+   - Enter a related topic:
      ```
-     Web3 应用使用智能合约来实现去信任的交易，
-     用户可以直接点对点交互，无需中介。
+     Web3 applications use smart contracts to enable trustless transactions, 
+     allowing users to interact peer-to-peer without intermediaries.
      ```
-   - 点击"捕获"
+   - Click "Capture"
 
-3. **查看相关想法**
-   - 选择任一想法
-   - 右侧面板顶部会显示"相关灵感"
-   - 显示相似度百分比
+3. **View Related Ideas**
+   - Select any idea
+   - The right panel will show "Related Ideas" at the top
+   - Shows similarity percentages
 
-4. **测试 RAG 对话**
-   - 在聊天框输入：
+4. **Test RAG Conversation**
+   - Enter in the chat box:
      ```
-     这个想法和其他概念有什么联系？
+     How does this idea connect to other concepts?
      ```
-   - AI 会引用相关想法和图结构回答
+   - AI will reference related ideas and graph structure in response
 
-## 验证 RAG 是否工作
+## Verify RAG is Working
 
-### 检查向量数据库文件
+### Check Vector Database Files
 ```bash
-# 应该看到这两个文件
-ls backend/vector_db.pkl
-ls backend/ideas_db.pkl
+# You should see these two files
+ls backend/data/vector_db.pkl
+ls backend/data/ideas_db.pkl
 ```
 
-### 查看后端日志
-后端会输出相似度搜索结果，例如：
+### View Backend Logs
+Backend will output similarity search results, for example:
 ```
 Found 2 similar ideas for current idea
 Similarity scores: [0.87, 0.72]
 ```
 
-### 前端界面验证
-- ✅ 右侧面板显示"相关灵感"
-- ✅ 显示相似度百分比（如 87%）
-- ✅ 对话时 AI 提到相关想法
+### Frontend Interface Verification
+- ✅ Right panel shows "Related Ideas"
+- ✅ Shows similarity percentages (e.g., 87%)
+- ✅ AI mentions related ideas during conversation
 
-## 常见问题
+## Common Issues
 
-### Q: 相关想法不显示？
-A: 至少需要 2 个想法才能进行相似度搜索
+### Q: Related ideas not showing?
+A: You need at least 2 ideas for similarity search
 
-### Q: 向量数据库文件在哪？
-A: 在 `backend/` 目录下，自动创建
+### Q: Where are the vector database files?
+A: In the `backend/data/` directory, created automatically
 
-### Q: 如何清空数据库？
-A: 删除 `vector_db.pkl` 和 `ideas_db.pkl` 文件
+### Q: How to clear the database?
+A: Delete `vector_db.pkl` and `ideas_db.pkl` files
 
-### Q: 支持哪些 API？
-A: 任何 OpenAI 兼容的 API：
+### Q: Which APIs are supported?
+A: Any OpenAI-compatible API:
 - OpenAI
 - Azure OpenAI
-- 本地模型（Ollama, LM Studio）
-- 其他提供商（DeepSeek, Moonshot 等）
+- Local models (Ollama, LM Studio)
+- Other providers (DeepSeek, Moonshot, etc.)
 
-## 下一步
+## Next Steps
 
-- 📖 阅读 [GRAPH_RAG_GUIDE.md](GRAPH_RAG_GUIDE.md) 了解实现细节
-- 🔧 查看 [API_CONFIGURATION.md](API_CONFIGURATION.md) 配置不同的 API
-- 🚀 开始捕获你的想法，构建知识图谱！
+- 📖 Read [GRAPH_RAG_GUIDE.md](GRAPH_RAG_GUIDE.md) for implementation details
+- 🔧 Check [API_CONFIGURATION.md](../api/API_CONFIGURATION.md) to configure different APIs
+- 🚀 Start capturing your ideas and building knowledge graphs!

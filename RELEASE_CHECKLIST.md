@@ -15,11 +15,14 @@
 - [x] 更新了 .gitignore 文件
 
 ## 📖 文档完善
-- [x] 重写了面向用户的 README.md
+- [x] 重写了面向用户的 README.md（英文版）
+- [x] 创建了中文版 README_CN.md
 - [x] 创建了 LICENSE 文件
 - [x] 添加了 CONTRIBUTING.md
 - [x] 整理了 docs/ 目录结构
-- [x] 创建了部署指南
+- [x] 创建了双语部署指南
+- [x] 添加了多语言文档索引
+- [x] 创建了语言支持说明
 
 ## 🔒 安全检查
 - [x] 确保 .env 文件不会被提交

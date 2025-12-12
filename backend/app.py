@@ -8,9 +8,11 @@ from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# Load environment variables from backend/.env or root .env
-load_dotenv()  # Load from backend/.env
-load_dotenv("../.env")  # Also try root .env
+# Load environment variables from multiple possible locations
+# Priority: 1. System env vars (production) 2. Local .env files (development)
+load_dotenv()  # Load from backend/.env (if exists)
+load_dotenv("../.env")  # Also try root .env (if exists)
+load_dotenv("../config/.env")  # Load from config/.env (project standard location)
 
 # 配置静态文件目录（Docker 环境中前端构建产物在 /app/dist）
 DIST_DIR = Path(__file__).parent.parent / "dist"

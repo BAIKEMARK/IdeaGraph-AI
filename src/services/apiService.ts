@@ -1,7 +1,10 @@
 import { DistilledData, Idea } from "@/types/types";
 
 // Configuration for Backend URL
-const BACKEND_URL = "http://localhost:5000/api";
+// 在生产环境中使用相对路径，开发环境使用 localhost
+const BACKEND_URL = import.meta.env.DEV 
+  ? "http://localhost:5000/api" 
+  : "/api";
 
 /**
  * API Service for IdeaGraph Backend

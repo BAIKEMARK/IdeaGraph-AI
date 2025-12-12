@@ -3,7 +3,7 @@ import json
 import pickle
 import numpy as np
 from pathlib import Path
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -12,7 +12,10 @@ from dotenv import load_dotenv
 load_dotenv()  # Load from backend/.env
 load_dotenv("../.env")  # Also try root .env
 
-app = Flask(__name__)
+# 配置静态文件目录（Docker 环境中前端构建产物在 /app/dist）
+DIST_DIR = Path(__file__).parent.parent / "dist"
+
+app = Flask(__name__, static_folder=str(DIST_DIR), static_url_path='')
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Add request logging
@@ -1411,5 +1414,31 @@ def refine_idea():
         return jsonify({"error": f"Refine operation failed: {str(e)}"}), 500
 
 
+# 静态文件路由 - 服务前端应用
+@app.route('/')
+def serve_index():
+    """服务前端 index.html"""
+    try:
+        return send_from_directory(app.static_folder, 'index.html')
+    except FileNotFoundError:
+        return jsonify({"error": "Frontend not built. Please run 'npm run build' first."}), 404
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """服务前端静态资源，如果文件不存在则返回 index.html（SPA 路由）"""
+    try:
+        return send_from_directory(app.static_folder, path)
+    except FileNotFoundError:
+        # SPA 路由回退到 index.html
+        try:
+            return send_from_directory(app.static_folder, 'index.html')
+        except FileNotFoundError:
+            return jsonify({"error": "Frontend not built. Please run 'npm run build' first."}), 404
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # 魔搭社区创空间需要监听 7860 端口
+    port = int(os.getenv("PORT", 7860))
+    # 生产环境不使用 debug 模式
+    debug = os.getenv("FLASK_DEBUG", "False").lower() == "true"
+    app.run(host="0.0.0.0", port=port, debug=debug)

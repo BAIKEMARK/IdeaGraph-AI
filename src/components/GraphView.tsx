@@ -104,6 +104,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
   const renderLevel1Graph = (level1Data: Level1GraphData): (() => void) => {
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove(); // Clear previous render
+    
+    // Optimize SVG for better rendering performance
+    svg.attr("shape-rendering", "geometricPrecision")
+       .attr("text-rendering", "geometricPrecision");
 
     const width = dimensions.width;
     const height = dimensions.height;
@@ -263,6 +267,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
           if (!event.active) simulation.alphaTarget(0.3).restart();
           d.fx = d.x;
           d.fy = d.y;
+          // Add dragging class to reduce visual effects during drag
+          d3.select(event.sourceEvent.target).classed("dragging", true);
         })
         .on("drag", (event, d) => {
           d.fx = event.x;
@@ -272,6 +278,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
           if (!event.active) simulation.alphaTarget(0);
           d.fx = null;
           d.fy = null;
+          // Remove dragging class
+          d3.select(event.sourceEvent.target).classed("dragging", false);
         }) as any);
     
     // Tooltip for nodes
@@ -330,6 +338,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
   const renderLevel2Graph = (level2Data: Level2GraphData): (() => void) => {
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove(); // Clear previous render
+    
+    // Optimize SVG for better rendering performance
+    svg.attr("shape-rendering", "geometricPrecision")
+       .attr("text-rendering", "geometricPrecision");
 
     const width = dimensions.width;
     const height = dimensions.height;
@@ -488,6 +500,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
           if (!event.active) simulation.alphaTarget(0.3).restart();
           d.fx = d.x;
           d.fy = d.y;
+          // Add dragging class to reduce visual effects during drag
+          d3.select(event.sourceEvent.target).classed("dragging", true);
         })
         .on("drag", (event, d) => {
           d.fx = event.x;
@@ -497,6 +511,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
           if (!event.active) simulation.alphaTarget(0);
           d.fx = null;
           d.fy = null;
+          // Remove dragging class
+          d3.select(event.sourceEvent.target).classed("dragging", false);
         }) as any);
     
     // Tooltip behavior for nodes
@@ -559,6 +575,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
   const renderLegacyGraph = (graphStructure: GraphStructure): (() => void) => {
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove(); // Clear previous render
+    
+    // Optimize SVG for better rendering performance
+    svg.attr("shape-rendering", "geometricPrecision")
+       .attr("text-rendering", "geometricPrecision");
 
     const width = dimensions.width;
     const height = dimensions.height;
@@ -640,6 +660,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
           if (!event.active) simulation.alphaTarget(0.3).restart();
           d.fx = d.x;
           d.fy = d.y;
+          // Add dragging class to reduce visual effects during drag
+          d3.select(event.sourceEvent.target).classed("dragging", true);
         })
         .on("drag", (event, d) => {
           d.fx = event.x;
@@ -649,6 +671,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
           if (!event.active) simulation.alphaTarget(0);
           d.fx = null;
           d.fy = null;
+          // Remove dragging class
+          d3.select(event.sourceEvent.target).classed("dragging", false);
         }) as any);
     
     // Tooltip behavior for nodes
@@ -706,7 +730,18 @@ export const GraphView: React.FC<GraphViewProps> = ({
         }}
       />
       
-      <svg ref={svgRef} className="w-full h-full block relative z-10" />
+      <svg 
+        ref={svgRef} 
+        className="w-full h-full block relative z-10" 
+        style={{
+          shapeRendering: 'geometricPrecision',
+          textRendering: 'geometricPrecision',
+          // Additional optimizations to reduce ghosting
+          backfaceVisibility: 'hidden',
+          transform: 'translateZ(0)', // Force hardware acceleration
+          willChange: 'transform' // Hint to browser for optimization
+        }}
+      />
       
       {/* Back to Level 1 button when in Level 2 */}
       {renderingMode === 2 && graphData && onBackToLevel1 && (

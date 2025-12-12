@@ -1,0 +1,37 @@
+{
+  "name": "IdeaGraph AI",
+  "description": "智能想法图谱 - 将零散想法转化为结构化知识网络",
+  "version": "1.0.0",
+  "author": "IdeaGraph Team",
+  "license": "MIT",
+  "tags": ["AI", "知识管理", "想法整理", "图谱", "LLM"],
+  "runtime": {
+    "framework": "gradio",
+    "python_version": "3.11",
+    "port": 7860
+  },
+  "environment": {
+    "required": [
+      "LLM_API_KEY"
+    ],
+    "optional": [
+      "LLM_BASE_URL",
+      "LLM_MODEL",
+      "EMBEDDING_API_KEY",
+      "EMBEDDING_BASE_URL", 
+      "EMBEDDING_MODEL"
+    ]
+  },
+  "resources": {
+    "cpu": "2",
+    "memory": "4Gi",
+    "storage": "10Gi"
+  },
+  "features": [
+    "想法蒸馏：将文本转化为结构化图谱",
+    "智能对话：基于知识图谱的上下文对话",
+    "相似搜索：向量相似度检索相关想法",
+    "想法演化：合并、拆分、精炼想法",
+    "可视化：交互式知识图谱展示"
+  ]
+}

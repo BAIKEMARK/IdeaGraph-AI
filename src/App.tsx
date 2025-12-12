@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Plus, BrainCircuit, MessageSquare, LayoutGrid, Loader2, Languages, Sparkles } from 'lucide-react';
+import { Plus, BrainCircuit, LayoutGrid, Loader2, Languages, Sparkles } from 'lucide-react';
 import { GraphView } from '@/components/GraphView';
 import { IdeaList } from '@/components/IdeaList';
 import { ChatPanel } from '@/components/ChatPanel';
@@ -791,10 +791,10 @@ function AppContent() {
                      ) : null}
                    </ErrorBoundary>
                    
-                   {/* Level Indicator and Panel Controls */}
+                   {/* Level Indicator (top right) */}
                    {graphData && (
                      <div className="absolute top-4 right-4 z-10">
-                       <div className="bg-zinc-900/80 px-4 py-2.5 rounded-xl text-sm border border-white/10 backdrop-blur-xl flex items-center gap-3 shadow-lg mb-3">
+                       <div className="bg-zinc-900/80 px-4 py-2.5 rounded-xl text-sm border border-white/10 backdrop-blur-xl flex items-center gap-3 shadow-lg">
                          <span className="text-lg">
                            {graphData.level === 1 ? '🌐' : '🔬'}
                          </span>
@@ -807,49 +807,52 @@ function AppContent() {
                            </span>
                          )}
                        </div>
-                       
-                       {/* Panel Toggle Controls (only in Level 2) */}
-                       {graphData.level === 2 && selectedIdea && (
-                         <div className="flex gap-2">
-                           <button
-                             onClick={() => setShowRelatedPanel(!showRelatedPanel)}
-                             className={`p-2 rounded-lg border border-white/10 backdrop-blur-xl transition-all ${
-                               showRelatedPanel 
-                                 ? 'bg-cyan-500/20 text-cyan-400' 
-                                 : 'bg-zinc-900/80 text-zinc-400 hover:text-cyan-400'
-                             }`}
-                             title="Toggle Related Ideas (Ctrl+1)"
-                           >
-                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                             </svg>
-                           </button>
-                           <button
-                             onClick={() => setShowChatPanel(!showChatPanel)}
-                             className={`p-2 rounded-lg border border-white/10 backdrop-blur-xl transition-all ${
-                               showChatPanel 
-                                 ? 'bg-purple-500/20 text-purple-400' 
-                                 : 'bg-zinc-900/80 text-zinc-400 hover:text-purple-400'
-                             }`}
-                             title="Toggle Chat Panel (Ctrl+2)"
-                           >
-                             <Sparkles className="w-4 h-4" />
-                           </button>
-                           <button
-                             onClick={() => {
-                               setSidebarWidth(320);
-                               setChatPanelWidth(384);
-                               setRelatedPanelWidth(320);
-                             }}
-                             className="p-2 rounded-lg border border-white/10 backdrop-blur-xl transition-all bg-zinc-900/80 text-zinc-400 hover:text-zinc-200"
-                             title="Reset Panel Sizes (Ctrl+Shift+R)"
-                           >
-                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                             </svg>
-                           </button>
-                         </div>
-                       )}
+                     </div>
+                   )}
+
+                   {/* Panel Toggle Controls - Floating Toolbar (left side, only in Level 2) */}
+                   {graphData?.level === 2 && selectedIdea && (
+                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30">
+                       <div className="flex flex-col gap-2 bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl">
+                         <button
+                           onClick={() => setShowRelatedPanel(!showRelatedPanel)}
+                           className={`p-3 rounded-xl transition-all ${
+                             showRelatedPanel 
+                               ? 'bg-cyan-500/20 text-cyan-400 shadow-lg' 
+                               : 'text-zinc-400 hover:text-cyan-400 hover:bg-cyan-500/10'
+                           }`}
+                           title="Toggle Related Ideas (Ctrl+1)"
+                         >
+                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                           </svg>
+                         </button>
+                         <button
+                           onClick={() => setShowChatPanel(!showChatPanel)}
+                           className={`p-3 rounded-xl transition-all ${
+                             showChatPanel 
+                               ? 'bg-purple-500/20 text-purple-400 shadow-lg' 
+                               : 'text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10'
+                           }`}
+                           title="Toggle Chat Panel (Ctrl+2)"
+                         >
+                           <Sparkles className="w-5 h-5" />
+                         </button>
+                         <div className="w-full h-px bg-white/10 my-1"></div>
+                         <button
+                           onClick={() => {
+                             setSidebarWidth(320);
+                             setChatPanelWidth(384);
+                             setRelatedPanelWidth(320);
+                           }}
+                           className="p-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-all"
+                           title="Reset Panel Sizes (Ctrl+Shift+R)"
+                         >
+                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                           </svg>
+                         </button>
+                       </div>
                      </div>
                    )}
 
@@ -889,95 +892,111 @@ function AppContent() {
                    )}
                 </div>
 
-                {/* Floating Chat Panel (only in Level 2) */}
-                {selectedIdea && graphData?.level === 2 && showChatPanel && (
+                {/* Right Side Panel Container - Vertical Stack (only in Level 2) */}
+                {selectedIdea && graphData?.level === 2 && (showRelatedPanel || showChatPanel) && (
                   <div 
-                    className="absolute right-4 top-20 z-10 relative"
-                    style={{ width: `${chatPanelWidth}px` }}
+                    className="absolute right-0 top-0 bottom-0 z-10 flex flex-col p-4 pt-20"
+                    style={{ width: `${Math.max(chatPanelWidth, relatedPanelWidth)}px` }}
                   >
-                    <div className="h-[calc(100vh-8rem)]">
-                      <div className="flex items-center justify-between p-3 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-t-2xl">
-                        <div className="flex items-center gap-2 text-sm text-zinc-200">
-                          <Sparkles className="w-4 h-4 text-purple-400" />
-                          <span className="font-semibold">Chat</span>
+                    {/* Related Ideas Panel (Top) */}
+                    {showRelatedPanel && (
+                      <div className="relative mb-3">
+                        <div className="flex items-center justify-between p-3 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-t-2xl">
+                          <div className="flex items-center gap-2 text-sm text-zinc-200">
+                            <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                            <span className="font-semibold">Related</span>
+                          </div>
+                          <button
+                            onClick={() => setShowRelatedPanel(false)}
+                            className="p-1 hover:bg-zinc-800/50 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
-                        <button
-                          onClick={() => setShowChatPanel(false)}
-                          className="p-1 hover:bg-zinc-800/50 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="h-[calc(100%-3rem)] relative">
-                        <ChatPanel 
-                          idea={selectedIdea} 
-                          onUpdateIdea={(updates) => handleUpdateIdea(selectedIdea.idea_id, updates)}
-                        />
-                        {/* Chat Panel Resize Handle */}
-                        <div
-                          className={`absolute top-0 left-0 w-1 h-full cursor-col-resize hover:bg-purple-500/50 transition-colors group ${
-                            isResizingChat ? 'bg-purple-500' : 'bg-transparent'
+                        <div 
+                          className={`relative bg-zinc-900/80 backdrop-blur-xl border-l border-r border-white/10 overflow-hidden ${
+                            showChatPanel ? 'border-b' : 'rounded-b-2xl border-b'
                           }`}
-                          onMouseDown={handleChatPanelResize}
+                          style={{ 
+                            height: showChatPanel 
+                              ? 'calc((100vh - 8rem) / 2 - 1.5rem)' 
+                              : 'calc(100vh - 8rem - 1.5rem)'
+                          }}
                         >
-                          <div className="absolute left-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex flex-col space-y-1">
-                              <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
-                              <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
-                              <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
+                          <RelatedIdeas 
+                            currentIdea={selectedIdea}
+                            onSelectIdea={setSelectedIdeaId}
+                          />
+                          {/* Related Panel Resize Handle */}
+                          <div
+                            className={`absolute top-0 left-0 w-1 h-full cursor-col-resize hover:bg-cyan-500/50 transition-colors group ${
+                              isResizingRelated ? 'bg-cyan-500' : 'bg-transparent'
+                            }`}
+                            onMouseDown={handleRelatedPanelResize}
+                          >
+                            <div className="absolute left-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex flex-col space-y-1">
+                                <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                {/* Floating Related Ideas Panel (only in Level 2) */}
-                {selectedIdea && graphData?.level === 2 && showRelatedPanel && (
-                  <div 
-                    className="absolute left-4 top-4 z-10 relative"
-                    style={{ width: `${relatedPanelWidth}px` }}
-                  >
-                    <div className="flex items-center justify-between p-3 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-t-2xl">
-                      <div className="flex items-center gap-2 text-sm text-zinc-200">
-                        <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                        <span className="font-semibold">Related</span>
-                      </div>
-                      <button
-                        onClick={() => setShowRelatedPanel(false)}
-                        className="p-1 hover:bg-zinc-800/50 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <RelatedIdeas 
-                        currentIdea={selectedIdea}
-                        onSelectIdea={setSelectedIdeaId}
-                      />
-                      {/* Related Panel Resize Handle */}
-                      <div
-                        className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500/50 transition-colors group ${
-                          isResizingRelated ? 'bg-cyan-500' : 'bg-transparent'
-                        }`}
-                        onMouseDown={handleRelatedPanelResize}
-                      >
-                        <div className="absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="flex flex-col space-y-1">
-                            <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
-                            <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
-                            <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                    {/* Chat Panel (Bottom) */}
+                    {showChatPanel && (
+                      <div className="relative flex-1">
+                        <div className="flex items-center justify-between p-3 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-t-2xl">
+                          <div className="flex items-center gap-2 text-sm text-zinc-200">
+                            <Sparkles className="w-4 h-4 text-purple-400" />
+                            <span className="font-semibold">Chat</span>
+                          </div>
+                          <button
+                            onClick={() => setShowChatPanel(false)}
+                            className="p-1 hover:bg-zinc-800/50 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div 
+                          className="relative bg-zinc-900/80 backdrop-blur-xl border-l border-r border-b border-white/10 rounded-b-2xl"
+                          style={{ 
+                            height: showRelatedPanel 
+                              ? 'calc((100vh - 8rem) / 2 - 1.5rem - 3rem)' 
+                              : 'calc(100vh - 8rem - 1.5rem - 3rem)'
+                          }}
+                        >
+                          <ChatPanel 
+                            idea={selectedIdea} 
+                            onUpdateIdea={(updates) => handleUpdateIdea(selectedIdea.idea_id, updates)}
+                          />
+                          {/* Chat Panel Resize Handle */}
+                          <div
+                            className={`absolute top-0 left-0 w-1 h-full cursor-col-resize hover:bg-purple-500/50 transition-colors group ${
+                              isResizingChat ? 'bg-purple-500' : 'bg-transparent'
+                            }`}
+                            onMouseDown={handleChatPanelResize}
+                          >
+                            <div className="absolute left-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex flex-col space-y-1">
+                                <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
             </div>

@@ -13,3 +13,38 @@
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
 }
+
+/* Graph View Optimizations */
+svg {
+  /* Optimize SVG rendering for better performance */
+  shape-rendering: geometricPrecision;
+  text-rendering: geometricPrecision;
+}
+
+/* Dragging state optimizations to reduce ghosting */
+svg .dragging {
+  /* Disable transitions during drag */
+  transition: none !important;
+  /* Optimize rendering during drag */
+  shape-rendering: optimizeSpeed;
+  /* Reduce opacity slightly to indicate dragging state */
+  opacity: 0.9;
+  /* Add subtle shadow to indicate elevation */
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* Ensure smooth transitions when not dragging */
+svg circle:not(.dragging) {
+  transition: all 0.2s ease-out;
+}
+
+/* Optimize text rendering in SVG */
+svg text {
+  /* Prevent text selection during drag operations */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  /* Optimize text rendering */
+  text-rendering: geometricPrecision;
+}

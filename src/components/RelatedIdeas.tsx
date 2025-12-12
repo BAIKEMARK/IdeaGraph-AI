@@ -54,34 +54,32 @@ export const RelatedIdeas: React.FC<RelatedIdeasProps> = ({ currentIdea, onSelec
   }
 
   return (
-    <div className="bg-zinc-900/80 backdrop-blur-xl border-x border-b border-white/10 rounded-b-2xl shadow-2xl overflow-hidden">
-      <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
-        {relatedIdeas.map(({ idea_id, similarity, idea_data }) => (
-          <div
-            key={idea_id}
-            onClick={() => onSelectIdea(idea_id)}
-            className="p-3 bg-zinc-800/30 hover:bg-zinc-800/50 border border-white/5 hover:border-cyan-400/30 rounded-xl cursor-pointer transition-all group active:scale-95 backdrop-blur-sm"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <p className="text-sm text-zinc-300 group-hover:text-zinc-200 line-clamp-2 flex-1 leading-relaxed">
-                {idea_data.distilled_data.one_liner}
-              </p>
-              <div className="ml-3 flex-shrink-0">
-                <span className="text-xs px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30">
-                  {(similarity * 100).toFixed(0)}%
-                </span>
-              </div>
-            </div>
-            <div className="flex space-x-1.5">
-              {idea_data.distilled_data.tags.slice(0, 2).map((tag) => (
-                <span key={tag} className="text-xs px-2 py-0.5 rounded-md bg-zinc-950/50 text-zinc-500 border border-zinc-700/50">
-                  #{tag}
-                </span>
-              ))}
+    <div className="p-4 space-y-3 h-full overflow-y-auto">
+      {relatedIdeas.map(({ idea_id, similarity, idea_data }) => (
+        <div
+          key={idea_id}
+          onClick={() => onSelectIdea(idea_id)}
+          className="p-3 bg-zinc-800/30 hover:bg-zinc-800/50 border border-white/5 hover:border-cyan-400/30 rounded-xl cursor-pointer transition-all group active:scale-95 backdrop-blur-sm"
+        >
+          <div className="flex items-start justify-between mb-2">
+            <p className="text-sm text-zinc-300 group-hover:text-zinc-200 line-clamp-2 flex-1 leading-relaxed">
+              {idea_data.distilled_data.one_liner}
+            </p>
+            <div className="ml-3 flex-shrink-0">
+              <span className="text-xs px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30">
+                {(similarity * 100).toFixed(0)}%
+              </span>
             </div>
           </div>
-        ))}
-      </div>
+          <div className="flex space-x-1.5">
+            {idea_data.distilled_data.tags.slice(0, 2).map((tag) => (
+              <span key={tag} className="text-xs px-2 py-0.5 rounded-md bg-zinc-950/50 text-zinc-500 border border-zinc-700/50">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

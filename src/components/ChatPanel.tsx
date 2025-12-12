@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Trash2 } from 'lucide-react';
+import { Send, User, Sparkles, Trash2 } from 'lucide-react';
 import { Idea, ChatMessage } from '@/types/types';
 import { chatWithIdea, clearChatHistory } from '@/services/apiService';
 import { v4 as uuidv4 } from 'uuid';
@@ -135,7 +135,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ idea, onUpdateIdea }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900/80 backdrop-blur-xl border-x border-b border-white/10 rounded-b-2xl shadow-2xl overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Header with Clear Button */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-zinc-900/50">
         <div className="flex items-center gap-2 text-xs text-zinc-400">
@@ -208,8 +208,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ idea, onUpdateIdea }) => {
             onKeyDown={handleKeyDown}
             placeholder={t('chat_placeholder') || '输入一个想法...'}
             className="w-full bg-zinc-950/50 border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all resize-none scrollbar-hide placeholder-zinc-500"
-            rows={1}
-            style={{ minHeight: '44px', maxHeight: '120px' }}
+            rows={2}
+            style={{ minHeight: '60px', maxHeight: '140px' }}
           />
           <button
             onClick={handleSend}
